@@ -10,49 +10,50 @@ Roadmap for the infrastructure component of the NIS2 Shield ecosystem.
 - [x] Fluent Bit log collector with SIEM support
 - [x] Automated PostgreSQL backups
 - [x] Non-root, read-only container hardening
-- [x] Full documentation (README, SECURITY, etc.)
-- [x] GitHub repo with topics
-- [x] Website integration (3rd project card)
+- [x] Production overrides (docker-compose.prod.yml)
+- [x] Example Dockerfile and requirements.txt
+- [x] CI/CD pipeline for validation
+- [x] Full documentation and GitHub release
 
 ---
 
-## 🔧 In Progress
+## 🔧 v0.2.0 - Observability & Testing
 
-### v0.2.0 - Production Ready
+### Restore Test Script ✅
+- [x] `scripts/restore-test.sh` - Automated disaster recovery drill
+- Starts empty DB container
+- Downloads latest backup
+- Restores and validates data
+- Auditor-friendly compliance proof
 
-- [ ] **docker-compose.prod.yml** - Production overrides
-  - Docker secrets instead of env vars
-  - Network policies
-  - Health checks
-  - Resource limits
+### ELK Stack Integration (Planned)
+- [ ] Docker Compose profile: `docker-compose --profile elk up`
+- [ ] Pre-configured Elasticsearch + Kibana
+- [ ] Fluent Bit → Elasticsearch pipeline
+- [ ] Sample Kibana dashboard for NIS2 logs
 
-- [ ] **Sample Dockerfile** - Example Django app
-  - Multi-stage build
-  - Non-root user
-  - django-nis2-shield pre-installed
-
-- [ ] **CI/CD Pipeline**
-  - Validate docker-compose on push
-  - Lint Fluent Bit config
+### Prometheus + Grafana (Planned)
+- [ ] django-prometheus integration guide
+- [ ] Grafana dashboard: RPS, error rates, backup status
+- [ ] Alert rules for NIS2 compliance
 
 ---
 
-## 📈 Roadmap
+## 📈 v0.3.0 - Cloud Native
 
-### v0.3.0 - Advanced Features
 - [ ] Kubernetes manifests (k8s/)
 - [ ] Helm chart
-- [ ] Terraform modules for cloud deployment
+- [ ] Terraform modules (AWS, GCP, Azure)
+- [ ] ArgoCD deployment example
 
-### v0.4.0 - Monitoring Stack
-- [ ] Prometheus + Grafana integration
-- [ ] Alert rules for NIS2 compliance
-- [ ] Dashboard templates
+---
 
-### v1.0.0 - Production Certified
-- [ ] Security audit
+## 📚 v1.0.0 - Production Certified
+
+- [ ] Security audit documentation
 - [ ] Performance benchmarks
-- [ ] Multi-cloud examples (AWS, GCP, Azure)
+- [ ] End-to-end tutorial on nis2shield.com
+- [ ] Video walkthrough
 
 ---
 
@@ -63,12 +64,3 @@ Roadmap for the infrastructure component of the NIS2 Shield ecosystem.
 | [django-nis2-shield](https://github.com/nis2shield/django-nis2-shield) | Backend middleware |
 | [@nis2shield/react-guard](https://github.com/nis2shield/react-guard) | Frontend protection |
 | [nis2shield.com](https://nis2shield.com) | Documentation hub |
-
----
-
-## 🙋 Contributing
-
-Want to help? Check [CONTRIBUTING.md](CONTRIBUTING.md) for:
-- New SIEM outputs (Loki, Datadog)
-- Backup strategies (S3, MinIO)
-- Kubernetes/Helm contributions

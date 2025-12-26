@@ -89,6 +89,26 @@ Automated PostgreSQL backups:
 - Retention: 7 days (configurable)
 - Location: `./backups/`
 
+## 🔄 Disaster Recovery Testing
+
+Test that your backups can be restored (NIS2 Art. 21c requirement):
+
+```bash
+# Run the automated restore test
+./scripts/restore-test.sh
+
+# Or specify a backup file
+./scripts/restore-test.sh ./backups/mybackup.sql.gz
+```
+
+The script will:
+1. Start an empty PostgreSQL container
+2. Restore the latest backup
+3. Validate the data integrity
+4. Generate a compliance report
+
+Keep the generated report for your NIS2 audit documentation.
+
 ## 📁 Project Structure
 
 ```
