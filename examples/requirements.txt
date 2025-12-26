@@ -1,0 +1,20 @@
+# Example requirements.txt for NIS2 Shield Django app
+
+# Framework
+Django>=4.2,<5.1
+
+# NIS2 Shield (the middleware)
+django-nis2-shield>=0.3.0
+
+# Production server
+gunicorn>=21.0
+
+# Database
+psycopg2-binary>=2.9
+
+# Security
+django-cors-headers>=4.0
+django-csp>=3.7
+
+# Environment
+python-dotenv>=1.0

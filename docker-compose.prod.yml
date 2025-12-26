@@ -1,0 +1,110 @@
+# Production overrides for docker-compose.yml
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+
+version: '3.8'
+
+services:
+  webapp:
+    # Use Docker secrets instead of environment variables
+    secrets:
+      - django_secret_key
+      - db_password
+    environment:
+      - DJANGO_SECRET_KEY_FILE=/run/secrets/django_secret_key
+      - POSTGRES_PASSWORD_FILE=/run/secrets/db_password
+      - DJANGO_DEBUG=false
+      - DJANGO_ALLOWED_HOSTS=${ALLOWED_HOSTS}
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+    # Health check
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/health/" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    # Logging with size limits
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    # Network isolation
+    networks:
+      - frontend
+      - backend
+
+  log-collector:
+    environment:
+      - ENVIRONMENT=production
+      - SIEM_HOST=${SIEM_HOST}
+      - SIEM_API_TOKEN=${SIEM_API_TOKEN}
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 128M
+    networks:
+      - backend
+
+  db-backup:
+    secrets:
+      - db_password
+    environment:
+      - POSTGRES_PASSWORD_FILE=/run/secrets/db_password
+      - BACKUP_KEEP_DAYS=30
+      - SCHEDULE=@every 1h00m
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 64M
+    networks:
+      - backend
+
+  db:
+    secrets:
+      - db_password
+    environment:
+      - POSTGRES_PASSWORD_FILE=/run/secrets/db_password
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+    # Data persistence with explicit mount options
+    volumes:
+      - type: volume
+        source: db_data
+        target: /var/lib/postgresql/data
+        volume:
+          nocopy: true
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-nis2user}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - backend
+
+# Production networks
+networks:
+  frontend:
+    driver: bridge
+  backend:
+    driver: bridge
+    internal: true # No external access
+
+# Docker secrets (create with: echo "value" | docker secret create name -)
+secrets:
+  django_secret_key:
+    external: true
+  db_password:
+    external: true

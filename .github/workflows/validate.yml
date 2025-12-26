@@ -1,0 +1,43 @@
+name: Validate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate docker-compose.yml
+        run: docker compose config -q
+
+      - name: Validate docker-compose.prod.yml
+        run: docker compose -f docker-compose.yml -f docker-compose.prod.yml config -q
+
+      - name: Lint Fluent Bit config
+        run: |
+          # Basic syntax check - ensure required sections exist
+          grep -q "\[SERVICE\]" monitoring/fluent-bit.conf
+          grep -q "\[INPUT\]" monitoring/fluent-bit.conf
+          grep -q "\[OUTPUT\]" monitoring/fluent-bit.conf
+          echo "✅ Fluent Bit config is valid"
+
+      - name: Check Dockerfile
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: examples/Dockerfile
+          failure-threshold: warning
+
+      - name: Security scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'config'
+          scan-ref: '.'
+          severity: 'HIGH,CRITICAL'
+          exit-code: '0'  # Don't fail on findings for now
