@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+
+  # --- LIVELLO 1: HARDENING (L'App Sicura) ---
+  webapp:
+    image: ghcr.io/nis2shield/django-app:latest
+    container_name: nis2_app
+    restart: always
+    # Security Context: L'app NON gira come root (Best Practice NIS2)
+    user: "1000:1000"
+    read_only: true # Filesystem bloccato in scrittura (Anti-Malware)
+    tmpfs:
+      - /tmp # Unica cartella scrivibile (in RAM)
+    environment:
+      - DJANGO_NIS2_LOG_PATH=/var/log/shared/app.json
+    volumes:
+      # Condivide la cartella dei log SOLO con il sidecar
+      - shared-logs:/var/log/shared
+    depends_on:
+      - db
+      - log-collector
+
+  # --- LIVELLO 2: COLLECTOR (Il Sidecar) ---
+  # Questo container "legge" quello che scrive la webapp e lo spedisce via.
+  # È il tuo "Postino" gratuito.
+  log-collector:
+    image: fluent/fluent-bit:latest
+    container_name: nis2_logger
+    volumes:
+      - shared-logs:/var/log/shared:ro # Legge i log dell'app
+      - ./monitoring/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf:ro
+    # Qui decidi la destinazione (Intrusa, S3, o cartella locale sicura)
+    environment:
+      - LOG_DESTINATION_HOST=intrusa-api.example.com
+
+  # --- LIVELLO 3: RESILIENZA (Backup Sidecar) ---
+  # Un container minuscolo che si sveglia solo per fare backup
+  db-backup:
+    image: prodrigestivill/postgres-backup-local
+    container_name: nis2_backup
+    volumes:
+      - ./backups:/backups
+    environment:
+      - POSTGRES_HOST=db
+      - POSTGRES_DB=myapp
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - SCHEDULE=@every 6h00m # Backup ogni 6 ore (Business Continuity)
+      - BACKUP_KEEP_DAYS=7 # Retention Policy
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15-alpine
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+volumes:
+  shared-logs:
+  db_data:

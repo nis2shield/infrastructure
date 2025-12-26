@@ -1,0 +1,31 @@
+# Environment files (contain secrets)
+.env
+.env.local
+.env.*.local
+
+# Backups (large files, contain sensitive data)
+backups/
+*.sql
+*.sql.gz
+*.dump
+
+# Docker
+docker-compose.override.yml
+
+# Logs
+logs/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Temporary files
+tmp/
+temp/
