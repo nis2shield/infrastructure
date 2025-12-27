@@ -1,0 +1,106 @@
+{{- if and .Values.database.enabled (not .Values.database.external.enabled) -}}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "nis2shield.fullname" . }}-db
+  labels:
+    {{- include "nis2shield.database.labels" . | nindent 4 }}
+spec:
+  serviceName: {{ include "nis2shield.fullname" . }}-db
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "nis2shield.database.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "nis2shield.database.selectorLabels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "nis2shield.serviceAccountName" . }}
+      securityContext:
+        fsGroup: 999
+      containers:
+        - name: postgresql
+          image: "{{ .Values.database.image.repository }}:{{ .Values.database.image.tag }}"
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 999
+            runAsGroup: 999
+            allowPrivilegeEscalation: false
+          ports:
+            - name: postgresql
+              containerPort: 5432
+              protocol: TCP
+          env:
+            - name: POSTGRES_DB
+              value: {{ .Values.database.auth.database }}
+            - name: POSTGRES_USER
+              value: {{ .Values.database.auth.username }}
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "nis2shield.fullname" . }}-db-secret
+                  key: password
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          resources:
+            {{- toYaml .Values.database.resources | nindent 12 }}
+          livenessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - {{ .Values.database.auth.username }}
+                - -d
+                - {{ .Values.database.auth.database }}
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - {{ .Values.database.auth.username }}
+                - -d
+                - {{ .Values.database.auth.database }}
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+  {{- if .Values.database.persistence.enabled }}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes:
+          - {{ .Values.database.persistence.accessMode }}
+        {{- if .Values.global.storageClass }}
+        storageClassName: {{ .Values.global.storageClass }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.database.persistence.size }}
+  {{- else }}
+      volumes:
+        - name: data
+          emptyDir: {}
+  {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "nis2shield.fullname" . }}-db
+  labels:
+    {{- include "nis2shield.database.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5432
+      targetPort: postgresql
+      protocol: TCP
+      name: postgresql
+  selector:
+    {{- include "nis2shield.database.selectorLabels" . | nindent 4 }}
+{{- end }}

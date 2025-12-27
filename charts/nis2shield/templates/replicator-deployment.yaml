@@ -1,0 +1,67 @@
+{{- if .Values.replicator.enabled -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "nis2shield.fullname" . }}-replicator
+  labels:
+    {{- include "nis2shield.replicator.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "nis2shield.replicator.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "nis2shield.replicator.selectorLabels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "nis2shield.serviceAccountName" . }}
+      securityContext:
+        fsGroup: 1000
+      containers:
+        - name: crypto-replicator
+          image: "{{ .Values.replicator.image.repository }}:{{ .Values.replicator.image.tag }}"
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            {{- include "nis2shield.securityContext" . | nindent 12 }}
+          env:
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "nis2shield.fullname" . }}-db-secret
+                  key: password
+            - name: DATABASE_URL
+              value: {{ include "nis2shield.databaseUrl" . | quote }}
+            - name: LISTEN_CHANNEL
+              value: {{ .Values.replicator.cdc.channel | quote }}
+            - name: CLOUD_API_URL
+              value: {{ .Values.replicator.cloud.apiUrl | quote }}
+            {{- if .Values.replicator.cloud.tokenSecret }}
+            - name: CLOUD_API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.replicator.cloud.tokenSecret }}
+                  key: {{ .Values.replicator.cloud.tokenKey }}
+            {{- end }}
+            - name: RSA_PUBLIC_KEY_PATH
+              value: /keys/public.pem
+            - name: KEY_ID
+              value: {{ .Values.replicator.encryption.keyId | quote }}
+            - name: DRY_RUN
+              value: {{ .Values.replicator.dryRun | toString | quote }}
+            - name: DEBUG
+              value: "false"
+          resources:
+            {{- toYaml .Values.replicator.resources | nindent 12 }}
+          volumeMounts:
+            - name: keys
+              mountPath: /keys
+              readOnly: true
+      volumes:
+        - name: keys
+          secret:
+            secretName: {{ .Values.replicator.encryption.publicKeySecret | default (printf "%s-encryption-keys" (include "nis2shield.fullname" .)) }}
+            items:
+              - key: {{ .Values.replicator.encryption.publicKeySecretKey }}
+                path: public.pem
+{{- end }}

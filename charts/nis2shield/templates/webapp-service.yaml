@@ -1,0 +1,17 @@
+{{- if .Values.webapp.enabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "nis2shield.fullname" . }}-webapp
+  labels:
+    {{- include "nis2shield.webapp.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.webapp.service.type }}
+  ports:
+    - port: {{ .Values.webapp.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "nis2shield.webapp.selectorLabels" . | nindent 4 }}
+{{- end }}

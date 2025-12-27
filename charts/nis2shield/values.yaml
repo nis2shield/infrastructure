@@ -1,0 +1,270 @@
+# NIS2 Shield Helm Chart - Default Values
+# =========================================
+#
+# This file contains all configurable values for the NIS2 Shield stack.
+# Override these in your own values.yaml or via --set flags.
+
+# Global settings
+global:
+  # Image pull secrets for private registries
+  imagePullSecrets: []
+  # Storage class for persistent volumes
+  storageClass: ""
+
+# ============================================================================
+# Webapp (Django Application)
+# ============================================================================
+webapp:
+  enabled: true
+  
+  image:
+    repository: your-registry/nis2-webapp
+    tag: latest
+    pullPolicy: IfNotPresent
+  
+  replicaCount: 1
+  
+  # Security hardening (NIS2 compliant)
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    readOnlyRootFilesystem: true
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+  
+  # Resources
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  
+  # Environment variables
+  env:
+    DJANGO_SETTINGS_MODULE: "config.settings.production"
+    NIS2_LOG_FORMAT: "json"
+  
+  # Extra environment from secrets
+  envFrom: []
+  
+  # Service configuration
+  service:
+    type: ClusterIP
+    port: 8000
+  
+  # Ingress configuration
+  ingress:
+    enabled: false
+    className: ""
+    annotations: {}
+    hosts:
+      - host: nis2shield.local
+        paths:
+          - path: /
+            pathType: Prefix
+    tls: []
+
+# ============================================================================
+# Database (PostgreSQL)
+# ============================================================================
+database:
+  enabled: true
+  
+  # Use external database instead of deploying one
+  external:
+    enabled: false
+    host: ""
+    port: 5432
+    database: "nis2_app"
+    username: "nis2user"
+    # Reference to existing secret containing password
+    existingSecret: ""
+    secretKey: "password"
+  
+  # Internal PostgreSQL settings (when external.enabled: false)
+  image:
+    repository: postgres
+    tag: "15-alpine"
+  
+  auth:
+    database: nis2_app
+    username: nis2user
+    # Password will be auto-generated if not set
+    password: ""
+    existingSecret: ""
+. 
+  persistence:
+    enabled: true
+    size: 10Gi
+    accessMode: ReadWriteOnce
+  
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+# ============================================================================
+# Log Collector (Fluent Bit)
+# ============================================================================
+logCollector:
+  enabled: true
+  
+  image:
+    repository: fluent/fluent-bit
+    tag: "2.2"
+  
+  # Output configuration
+  output:
+    # Send to stdout (for development)
+    stdout:
+      enabled: true
+    
+    # Send to Elasticsearch
+    elasticsearch:
+      enabled: false
+      host: "elasticsearch"
+      port: 9200
+      index: "nis2-logs"
+    
+    # Send to external SIEM (HTTP)
+    siem:
+      enabled: false
+      host: ""
+      port: 8088
+      uri: "/services/collector"
+      # Token from secret
+      tokenSecret: ""
+      tokenKey: "token"
+  
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+
+# ============================================================================
+# Backup Service
+# ============================================================================
+backup:
+  enabled: true
+  
+  image:
+    repository: prodrigestivill/postgres-backup-local
+    tag: "15"
+  
+  schedule: "@every 6h"
+  retention:
+    days: 7
+  
+  # GPG encryption
+  encryption:
+    enabled: false
+    keySecret: ""
+    keySecretKey: "gpg-key"
+  
+  persistence:
+    enabled: true
+    size: 5Gi
+    accessMode: ReadWriteOnce
+  
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+
+# ============================================================================
+# Crypto-Replicator (Encrypted Twin)
+# ============================================================================
+replicator:
+  enabled: false
+  
+  image:
+    repository: nis2shield/crypto-replicator
+    tag: "0.2.5"
+  
+  # Cloud backup configuration
+  cloud:
+    apiUrl: ""
+    # API token from secret
+    tokenSecret: ""
+    tokenKey: "cloud-token"
+  
+  # Encryption keys
+  encryption:
+    # RSA public key for envelope encryption
+    publicKeySecret: ""
+    publicKeySecretKey: "public.pem"
+    keyId: "cloud-backup"
+  
+  # PostgreSQL CDC
+  cdc:
+    channel: "nis2_changes"
+    # Tables to monitor (comma-separated)
+    tables: "nis2_audit_log"
+  
+  # Dry run mode (don't actually send to cloud)
+  dryRun: true
+  
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+
+# ============================================================================
+# Monitoring (Prometheus + Grafana)
+# ============================================================================
+monitoring:
+  enabled: false
+  
+  prometheus:
+    enabled: false
+    # Use subchart or external instance
+    external:
+      enabled: false
+      url: ""
+  
+  grafana:
+    enabled: false
+    adminPassword: ""
+    # Pre-loaded NIS2 dashboard
+    dashboards:
+      nis2Compliance: true
+
+# ============================================================================
+# Network Policies
+# ============================================================================
+networkPolicies:
+  enabled: false
+  
+  # Restrict ingress to webapp only
+  ingressController:
+    namespaceSelector: {}
+    podSelector: {}
+
+# ============================================================================
+# Pod Security Standards
+# ============================================================================
+podSecurityStandards:
+  # Enforce restricted PSS
+  enforce: "restricted"
+
+# ============================================================================
+# Service Account
+# ============================================================================
+serviceAccount:
+  create: true
+  name: ""
+  annotations: {}

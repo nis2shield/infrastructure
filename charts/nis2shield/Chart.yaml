@@ -1,0 +1,36 @@
+apiVersion: v2
+name: nis2shield
+description: |
+  NIS2 Shield - Secure-by-Design Infrastructure for NIS2 Compliance.
+  
+  This Helm chart deploys the complete NIS2 Shield infrastructure stack:
+  - Django webapp with forensic logging
+  - Fluent Bit log collector (SIEM ready)
+  - PostgreSQL database with automated backups
+  - Crypto-Replicator for encrypted cloud backup (optional)
+  - Prometheus + Grafana monitoring (optional)
+
+type: application
+version: 0.3.0
+appVersion: "0.2.5"
+
+home: https://nis2shield.com
+sources:
+  - https://github.com/nis2shield/infrastructure
+
+maintainers:
+  - name: NIS2Shield Team
+    url: https://github.com/nis2shield
+
+keywords:
+  - nis2
+  - security
+  - compliance
+  - logging
+  - backup
+  - encryption
+  - disaster-recovery
+
+annotations:
+  artifacthub.io/license: MIT
+  artifacthub.io/category: security

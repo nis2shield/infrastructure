@@ -1,0 +1,33 @@
+1. Get the application URL by running these commands:
+{{- if .Values.webapp.ingress.enabled }}
+{{- range $host := .Values.webapp.ingress.hosts }}
+  http{{ if $.Values.webapp.ingress.tls }}s{{ end }}://{{ $host.host }}
+{{- end }}
+{{- else if contains "NodePort" .Values.webapp.service.type }}
+  export NODE_PORT=$(kubectl get --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.ports[0].nodePort}" services {{ include "nis2shield.fullname" . }}-webapp)
+  export NODE_IP=$(kubectl get nodes --namespace {{ .Release.Namespace }} -o jsonpath="{.items[0].status.addresses[0].address}")
+  echo http://$NODE_IP:$NODE_PORT
+{{- else if contains "LoadBalancer" .Values.webapp.service.type }}
+  export SERVICE_IP=$(kubectl get svc --namespace {{ .Release.Namespace }} {{ include "nis2shield.fullname" . }}-webapp --template "{{"{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}"}}")
+  echo http://$SERVICE_IP:{{ .Values.webapp.service.port }}
+{{- else if contains "ClusterIP" .Values.webapp.service.type }}
+  kubectl --namespace {{ .Release.Namespace }} port-forward svc/{{ include "nis2shield.fullname" . }}-webapp 8080:{{ .Values.webapp.service.port }}
+  echo "Visit http://127.0.0.1:8080"
+{{- end }}
+
+2. Components installed:
+   - Webapp: {{ if .Values.webapp.enabled }}✅{{ else }}❌{{ end }}
+   - Database: {{ if .Values.database.enabled }}✅{{ if .Values.database.external.enabled }} (external){{ end }}{{ else }}❌{{ end }}
+   - Log Collector: {{ if .Values.logCollector.enabled }}✅{{ else }}❌{{ end }}
+   - Crypto-Replicator: {{ if .Values.replicator.enabled }}✅{{ if .Values.replicator.dryRun }} (dry-run){{ end }}{{ else }}❌{{ end }}
+   - Network Policies: {{ if .Values.networkPolicies.enabled }}✅{{ else }}❌{{ end }}
+
+3. Check pod status:
+   kubectl get pods --namespace {{ .Release.Namespace }} -l "app.kubernetes.io/instance={{ .Release.Name }}"
+
+{{- if .Values.replicator.enabled }}
+{{- if .Values.replicator.dryRun }}
+
+⚠️  Crypto-Replicator is in DRY-RUN mode. Set replicator.dryRun=false for production.
+{{- end }}
+{{- end }}

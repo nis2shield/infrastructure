@@ -1,0 +1,97 @@
+{{- if .Values.webapp.enabled -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "nis2shield.fullname" . }}-webapp
+  labels:
+    {{- include "nis2shield.webapp.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.webapp.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "nis2shield.webapp.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "nis2shield.webapp.selectorLabels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "nis2shield.serviceAccountName" . }}
+      securityContext:
+        fsGroup: 1000
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: webapp
+          image: "{{ .Values.webapp.image.repository }}:{{ .Values.webapp.image.tag }}"
+          imagePullPolicy: {{ .Values.webapp.image.pullPolicy }}
+          securityContext:
+            {{- include "nis2shield.securityContext" . | nindent 12 }}
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+          env:
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "nis2shield.fullname" . }}-db-secret
+                  key: password
+            - name: DATABASE_URL
+              value: {{ include "nis2shield.databaseUrl" . | quote }}
+            {{- range $key, $value := .Values.webapp.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+          {{- with .Values.webapp.envFrom }}
+          envFrom:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.webapp.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /health/
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health/
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: logs
+              mountPath: /app/logs
+        
+        {{- if .Values.logCollector.enabled }}
+        # Fluent Bit sidecar
+        - name: log-collector
+          image: "{{ .Values.logCollector.image.repository }}:{{ .Values.logCollector.image.tag }}"
+          securityContext:
+            {{- include "nis2shield.securityContext" . | nindent 12 }}
+          resources:
+            {{- toYaml .Values.logCollector.resources | nindent 12 }}
+          volumeMounts:
+            - name: logs
+              mountPath: /app/logs
+              readOnly: true
+            - name: fluent-bit-config
+              mountPath: /fluent-bit/etc
+        {{- end }}
+      
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: logs
+          emptyDir: {}
+        {{- if .Values.logCollector.enabled }}
+        - name: fluent-bit-config
+          configMap:
+            name: {{ include "nis2shield.fullname" . }}-fluent-bit
+        {{- end }}
+{{- end }}

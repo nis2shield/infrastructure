@@ -1,0 +1,60 @@
+{{- if .Values.logCollector.enabled -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "nis2shield.fullname" . }}-fluent-bit
+  labels:
+    {{- include "nis2shield.labels" . | nindent 4 }}
+data:
+  fluent-bit.conf: |
+    [SERVICE]
+        Flush         5
+        Daemon        Off
+        Log_Level     info
+        Parsers_File  parsers.conf
+    
+    [INPUT]
+        Name          tail
+        Path          /app/logs/*.log
+        Parser        json
+        Tag           nis2.*
+        Refresh_Interval 5
+    
+    {{- if .Values.logCollector.output.stdout.enabled }}
+    [OUTPUT]
+        Name          stdout
+        Match         *
+        Format        json_lines
+    {{- end }}
+    
+    {{- if .Values.logCollector.output.elasticsearch.enabled }}
+    [OUTPUT]
+        Name          es
+        Match         *
+        Host          {{ .Values.logCollector.output.elasticsearch.host }}
+        Port          {{ .Values.logCollector.output.elasticsearch.port }}
+        Index         {{ .Values.logCollector.output.elasticsearch.index }}
+        Logstash_Format On
+        Logstash_Prefix {{ .Values.logCollector.output.elasticsearch.index }}
+        Suppress_Type_Name On
+    {{- end }}
+    
+    {{- if .Values.logCollector.output.siem.enabled }}
+    [OUTPUT]
+        Name          http
+        Match         *
+        Host          {{ .Values.logCollector.output.siem.host }}
+        Port          {{ .Values.logCollector.output.siem.port }}
+        URI           {{ .Values.logCollector.output.siem.uri }}
+        Format        json
+        Header        Authorization Bearer ${SIEM_TOKEN}
+    {{- end }}
+
+  parsers.conf: |
+    [PARSER]
+        Name          json
+        Format        json
+        Time_Key      timestamp
+        Time_Format   %Y-%m-%dT%H:%M:%S.%L%z
+        Time_Keep     On
+{{- end }}
