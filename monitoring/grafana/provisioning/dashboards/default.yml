@@ -1,0 +1,13 @@
+# Grafana dashboard provisioning
+apiVersion: 1
+
+providers:
+  - name: 'NIS2 Dashboards'
+    orgId: 1
+    folder: 'NIS2'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards

@@ -33,10 +33,12 @@ Roadmap for the infrastructure component of the NIS2 Shield ecosystem.
 - [x] Setup script: `scripts/elk-setup.sh`
 - [x] Auto-configure Kibana index pattern
 
-### Prometheus + Grafana (Planned)
-- [ ] django-prometheus integration guide
-- [ ] Grafana dashboard: RPS, error rates, backup status
-- [ ] Alert rules for NIS2 compliance
+### Prometheus + Grafana ✅
+- [x] docker-compose.monitoring.yml (Prometheus + Grafana + Node Exporter)
+- [x] prometheus.yml - Scrape configuration
+- [x] alert_rules.yml - NIS2 compliance alerts
+- [x] Pre-loaded dashboard: RPS, error rate, disk, backup age
+- [x] Setup script: `scripts/monitoring-setup.sh`
 
 ---
 

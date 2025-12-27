@@ -1,0 +1,49 @@
+# Prometheus configuration for NIS2 Infrastructure
+# Scrapes metrics from webapp and services
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+# Load alert rules
+rule_files:
+  - "alert_rules.yml"
+
+# Alertmanager configuration (optional)
+# alerting:
+#   alertmanagers:
+#     - static_configs:
+#         - targets: ['alertmanager:9093']
+
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Node Exporter - Host metrics
+  - job_name: 'node'
+    static_configs:
+      - targets: ['node-exporter:9100']
+
+  # Django app metrics (if using django-prometheus)
+  # Uncomment and adjust port if your app exposes /metrics
+  - job_name: 'django'
+    static_configs:
+      - targets: ['webapp:8000']
+    metrics_path: /metrics
+    # If metrics require auth, add:
+    # basic_auth:
+    #   username: metrics
+    #   password: ${METRICS_PASSWORD}
+
+  # PostgreSQL metrics (if using postgres_exporter)
+  # - job_name: 'postgres'
+  #   static_configs:
+  #     - targets: ['postgres-exporter:9187']
+
+  # Fluent Bit metrics
+  # - job_name: 'fluentbit'
+  #   static_configs:
+  #     - targets: ['log-collector:2020']
+  #   metrics_path: /api/v1/metrics/prometheus
