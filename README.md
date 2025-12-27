@@ -2,16 +2,21 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](https://www.docker.com/)
+[![Helm](https://img.shields.io/badge/Helm-v0.3.0-0f1689.svg)](./charts/nis2shield)
+[![Terraform](https://img.shields.io/badge/Terraform-AWS%20%7C%20GCP%20%7C%20Azure-7b42bc.svg)](./terraform)
 
-**Secure-by-Design Docker Infrastructure for NIS2 Compliance.**
+**Secure-by-Design Infrastructure for NIS2 Compliance.**
 
-This repository provides the "last mile" for NIS2 compliance: **secure infrastructure**. While [django-nis2-shield](https://github.com/nis2shield/django-nis2-shield) and [@nis2shield/react-guard](https://github.com/nis2shield/react-guard) protect your code, this kit protects the **execution environment**.
+This repository provides the "last mile" for NIS2 compliance: **secure infrastructure**. Deploy with Docker Compose, Helm (Kubernetes), or Terraform (Cloud). While [django-nis2-shield](https://github.com/nis2shield/django-nis2-shield) and [@nis2shield/react-guard](https://github.com/nis2shield/react-guard) protect your code, this kit protects the **execution environment**.
 
 ## ✨ Features
 
 - 🔒 **Hardened Containers**: Non-root execution, read-only filesystem
 - 📊 **Log Segregation**: Logs exported via sidecar (Fluent Bit)
 - 💾 **Automated Backups**: PostgreSQL dumps with retention policy
+- 🔐 **Encrypted Twin**: Zero-trust cloud backup (AES-256 + RSA)
+- ☸️ **Kubernetes Ready**: Production Helm chart with NetworkPolicies
+- ☁️ **Multi-Cloud**: Terraform modules for AWS, GCP, Azure
 - 🏗️ **NIS2 Compliant**: Addresses Art. 21 infrastructure requirements
 
 ## 📋 Architecture
@@ -191,38 +196,68 @@ Pre-configured NIS2 dashboard includes:
 - Backup age monitoring
 - System resource usage
 
+## ☸️ Kubernetes (Helm Chart)
+
+For enterprise deployments, use our production-ready Helm chart:
+
+```bash
+# Install from local
+helm install nis2shield ./charts/nis2shield -n nis2 --create-namespace
+
+# With custom values
+helm install nis2shield ./charts/nis2shield -f values-prod.yaml
+```
+
+Features:
+- 🔒 Security hardening (PSS restricted, runAsNonRoot)
+- 🌐 Ingress with TLS support
+- 🔐 NetworkPolicies for service isolation
+- ⚙️ Toggle modules (replicator, monitoring)
+
+👉 **[Enterprise Deployment Guide](https://nis2shield.com/enterprise/)**
+
+## ☁️ Cloud Deployment (Terraform)
+
+Infrastructure-as-Code for major cloud providers:
+
+| Provider | Resources | Command |
+|----------|-----------|--------|
+| **AWS** | VPC, EKS, RDS, S3, KMS | `cd terraform/aws && terraform apply` |
+| **GCP** | VPC, GKE, Cloud SQL, Storage | `cd terraform/gcp && terraform apply` |
+| **Azure** | VNet, AKS, PostgreSQL, KeyVault | `cd terraform/azure && terraform apply` |
+
+All modules include:
+- Encrypted databases with managed keys
+- Private networking (no public IPs)
+- Secrets management integration
+- High availability options
+
 ## 📁 Project Structure
 
 ```
 infrastructure/
-├── docker-compose.yml              # Base stack (5 services)
+├── charts/nis2shield/              # ☸️ Helm Chart (K8s)
+│   ├── Chart.yaml
+│   ├── values.yaml
+│   └── templates/                  # Deployments, Services, etc.
+│
+├── terraform/                      # ☁️ Cloud IaC
+│   ├── aws/                        # VPC, EKS, RDS, S3
+│   ├── gcp/                        # VPC, GKE, Cloud SQL
+│   └── azure/                      # VNet, AKS, PostgreSQL
+│
+├── docker-compose.yml              # Base stack
 ├── docker-compose.prod.yml         # Production overrides
 ├── docker-compose.elk.yml          # ELK observability
 ├── docker-compose.monitoring.yml   # Prometheus + Grafana
-├── docker-compose.test.yml         # Integration testing
 │
-├── crypto-replicator/              # 🔐 Encrypted Twin service
+├── crypto-replicator/              # 🔐 Encrypted Twin
 │   ├── crypto_replicator/          # Python modules
-│   │   ├── crypto.py               # AES + RSA encryption
-│   │   ├── listener.py             # PostgreSQL CDC
-│   │   └── sender.py               # Cloud API client
-│   ├── mock_cloud/                 # Test receiver
-│   ├── tests/                      # Unit + integration tests
-│   ├── Dockerfile
-│   └── README.md
+│   ├── docs/                       # OpenAPI spec
+│   └── tests/                      # Unit + integration
 │
-├── monitoring/
-│   ├── fluent-bit.conf             # Default log config
-│   ├── prometheus.yml              # Prometheus config
-│   ├── alert_rules.yml             # NIS2 alerts
-│   └── grafana/                    # Dashboards + datasources
-│
-├── scripts/
-│   ├── restore-test.sh             # DR validation (GPG support)
-│   ├── elk-setup.sh                # ELK quick start
-│   └── monitoring-setup.sh         # Grafana quick start
-│
-└── examples/                       # Sample Django setup
+├── monitoring/                     # Fluent Bit, Prometheus
+└── scripts/                        # Setup & DR testing
 ```
 
 ## 🔐 NIS2 Compliance Matrix
