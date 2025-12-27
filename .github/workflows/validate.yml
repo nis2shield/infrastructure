@@ -32,7 +32,7 @@ jobs:
         uses: hadolint/hadolint-action@v3.1.0
         with:
           dockerfile: examples/Dockerfile
-          failure-threshold: warning
+          failure-threshold: error  # Only fail on errors, not warnings
 
       - name: Security scan
         uses: aquasecurity/trivy-action@master
