@@ -40,6 +40,12 @@ Roadmap for the infrastructure component of the NIS2 Shield ecosystem.
 - [x] Pre-loaded dashboard: RPS, error rate, disk, backup age
 - [x] Setup script: `scripts/monitoring-setup.sh`
 
+### End-to-End Tutorial ✅
+- [x] Comprehensive getting started guide at nis2shield.com/getting-started/
+- [x] Step-by-step for Django, React, and Infrastructure
+- [x] Code examples for each component
+- [x] Architecture diagram showing integration
+
 ---
 
 ## 📈 v0.3.0 - Cloud Native
