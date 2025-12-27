@@ -51,7 +51,7 @@ For each requirement:
 | # | Requirement | Implementation | Evidence | Status |
 |---|-------------|----------------|----------|--------|
 | 21c.1 | Automated backups | Every 6 hours, 7-day retention | `docker-compose.yml` (db-backup) | ✅ |
-| 21c.2 | Backup encryption | GPG encryption supported | `scripts/restore-test.sh` | ✅ |
+| 21c.2 | Backup encryption | <!--status-21.2.c-->✅ PASS<!--end--> | <!--evidence-21.2.c-->Backup Workflow verified (log_analyzer) (Last Check: 2025-12-27)<!--end--> | ✅ |
 | 21c.3 | Offsite backup | Crypto-Replicator to cloud | `crypto-replicator/` | ✅ |
 | 21c.4 | Zero-trust cloud | AES-256-GCM + RSA-OAEP | [CRYPTOGRAPHY.md](CRYPTOGRAPHY.md) | ✅ |
 | 21c.5 | DR testing | Automated restore test script | `scripts/restore-test.sh` | ✅ |
@@ -93,7 +93,7 @@ For each requirement:
 
 | # | Requirement | Implementation | Evidence | Status |
 |---|-------------|----------------|----------|--------|
-| 21f.1 | Encryption at rest | AES-256, Fernet | [CRYPTOGRAPHY.md](CRYPTOGRAPHY.md) | ✅ |
+| 21f.1 | Encryption at rest | <!--status-21.2.f-->❌ FAIL<!--end--> | <!--evidence-21.2.f-->Found 1 unencrypted resources (Last Check: 2025-12-27)<!--end--> | ✅ |
 | 21f.2 | Encryption in transit | TLS 1.2+ required | [SECURITY.md](../SECURITY.md) | ✅ |
 | 21f.3 | Key management | Rotation, separation, offline storage | [CRYPTOGRAPHY.md](CRYPTOGRAPHY.md) | ✅ |
 | 21f.4 | Algorithm selection | NIST-approved (AES, RSA, SHA-256) | [CRYPTOGRAPHY.md](CRYPTOGRAPHY.md) | ✅ |
