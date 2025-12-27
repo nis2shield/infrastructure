@@ -97,10 +97,7 @@ We moved from **Declarative** to **Demonstrable** compliance.
     *   `audit-engine/probes/log_analyzer.py` verifies operational continuity (e.g., did backups run?).
     *   `audit-engine/main.py` updates [docs/NIS2_SELF_ASSESSMENT.md](docs/NIS2_SELF_ASSESSMENT.md) automatically.
 
-**Run Auditor Locally:**
-```bash
-python3 audit-engine/main.py --report-file docs/NIS2_SELF_ASSESSMENT.md
-```
+> **Note**: The full Compliance Engine is available in the **[Pro Compliance](https://nis2shield.com/pricing)** edition. The Open Source version includes the `tfsec` and `gitleaks` guardrails.
 
 ## 🚀 Quick Start
 
