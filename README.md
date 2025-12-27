@@ -2,8 +2,9 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](https://www.docker.com/)
-[![Helm](https://img.shields.io/badge/Helm-v0.3.0-0f1689.svg)](./charts/nis2shield)
+[![Helm](https://img.shields.io/badge/Helm-v1.0.0-0f1689.svg)](./charts/nis2shield)
 [![Terraform](https://img.shields.io/badge/Terraform-AWS%20%7C%20GCP%20%7C%20Azure-7b42bc.svg)](./terraform)
+[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/nis2shield/infrastructure)
 
 **Secure-by-Design Infrastructure for NIS2 Compliance.**
 

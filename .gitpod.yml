@@ -1,0 +1,82 @@
+# Gitpod configuration for one-click NIS2 Shield demo
+# Open in browser: https://gitpod.io/#https://github.com/nis2shield/infrastructure
+
+image:
+  file: .gitpod.Dockerfile
+
+tasks:
+  - name: Start NIS2 Shield Stack
+    init: |
+      # Copy environment template
+      cp .env.example .env
+      
+      # Pull images in background
+      docker-compose pull &
+      
+      echo "🛡️ NIS2 Shield Demo Environment"
+      echo "================================"
+      echo ""
+      echo "Starting services..."
+    command: |
+      # Wait for Docker
+      gp await-port 23000 || true
+      
+      # Start the stack
+      docker-compose up -d
+      
+      # Wait for services
+      echo "⏳ Waiting for services to start..."
+      sleep 15
+      
+      # Show status
+      docker-compose ps
+      
+      echo ""
+      echo "✅ NIS2 Shield is running!"
+      echo ""
+      echo "📋 Quick Commands:"
+      echo "  docker-compose logs -f webapp     # View app logs"
+      echo "  docker-compose logs -f log-collector  # View log collector"
+      echo "  ./scripts/restore-test.sh         # Test DR backup"
+      echo ""
+      echo "🌐 Access Points:"
+      gp url 8000
+
+  - name: Django Shell
+    init: echo "Django shell helper ready"
+    command: |
+      echo "Run: docker-compose exec webapp python manage.py shell"
+      echo "Or:  docker-compose exec webapp python manage.py check_nis2"
+
+ports:
+  - port: 8000
+    onOpen: open-preview
+    name: NIS2 Shield App
+    description: Django application with NIS2 Shield middleware
+  
+  - port: 5432
+    onOpen: ignore
+    name: PostgreSQL
+    visibility: private
+  
+  - port: 9200
+    onOpen: ignore
+    name: Elasticsearch (if enabled)
+    visibility: private
+  
+  - port: 5601
+    onOpen: notify
+    name: Kibana (if enabled)
+    description: Log visualization dashboard
+
+vscode:
+  extensions:
+    - ms-python.python
+    - ms-azuretools.vscode-docker
+    - redhat.vscode-yaml
+
+# GitHub Codespaces compatibility
+codespaces:
+  openFiles:
+    - README.md
+    - docker-compose.yml
