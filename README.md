@@ -16,26 +16,67 @@ This repository provides the "last mile" for NIS2 compliance: **secure infrastru
 
 ## 📋 Architecture
 
+### Base Stack
+
+```mermaid
+graph TB
+    subgraph Docker["Docker Compose Stack"]
+        webapp["🐍 webapp<br/>(Django App)"]
+        logs["📊 log-collector<br/>(Fluent Bit)"]
+        backup["💾 db-backup<br/>(Cron)"]
+        db[(PostgreSQL)]
+        
+        webapp --> |writes logs| logs
+        webapp --> db
+        backup --> |dumps| db
+    end
+    
+    logs --> |forwards to| SIEM["🔒 SIEM/Elasticsearch"]
+    backup --> |stores| Storage["📁 ./backups/"]
+    
+    style webapp fill:#3b82f6
+    style logs fill:#10b981
+    style backup fill:#f59e0b
+    style db fill:#8b5cf6
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                     Docker Compose Stack                     │
-├─────────────────────────────────────────────────────────────┤
-│                                                              │
-│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐   │
-│  │   webapp     │    │ log-collector│    │  db-backup   │   │
-│  │   (Django)   │───▶│ (Fluent Bit) │    │  (Cron)      │   │
-│  │              │    │              │    │              │   │
-│  │ • Non-root   │    │ • Reads logs │    │ • 6h backup  │   │
-│  │ • Read-only  │    │ • SIEM ready │    │ • 7d retain  │   │
-│  └──────────────┘    └──────────────┘    └──────────────┘   │
-│         │                                       │            │
-│         ▼                                       ▼            │
-│  ┌──────────────────────────────────────────────────────┐   │
-│  │                    PostgreSQL                         │   │
-│  └──────────────────────────────────────────────────────┘   │
-│                                                              │
-└─────────────────────────────────────────────────────────────┘
+
+### Security Features
+
+| Component | Protection |
+|-----------|------------|
+| webapp | Non-root, read-only filesystem, tmpfs |
+| log-collector | Read-only log access, SIEM forwarding |
+| db-backup | 7-day retention, optional GPG encryption |
+| PostgreSQL | Dedicated volume, health checks |
+
+---
+
+### 🔐 Encrypted Twin (Disaster Recovery)
+
+The **Crypto-Replicator** provides zero-trust cloud backup:
+
+```mermaid
+sequenceDiagram
+    participant DB as PostgreSQL
+    participant CR as Crypto-Replicator
+    participant Cloud as ☁️ Cloud Storage
+    
+    DB->>CR: NOTIFY (change event)
+    
+    Note over CR: 1. Generate AES session key
+    Note over CR: 2. Encrypt data with AES-GCM
+    Note over CR: 3. Wrap key with RSA public
+    
+    CR->>Cloud: Encrypted Envelope
+    
+    Note over Cloud: ⚠️ Cannot decrypt!<br/>(no private key)
 ```
+
+**Key Features:**
+- 🔒 **AES-256-GCM** - Authenticated data encryption
+- 🔑 **RSA-OAEP** - Asymmetric key wrapping
+- 🔄 **Forward Secrecy** - Unique session key per message
+- ☁️ **Zero-Trust Cloud** - Cloud cannot read your data
 
 ## 🚀 Quick Start
 
@@ -129,25 +170,59 @@ Go to Kibana → Analytics → Discover → Select "NIS2 Logs" to see your logs.
 
 > **Note**: ELK requires ~1.5GB RAM. Use the base stack for low-memory systems.
 
+## 📈 Prometheus + Grafana Monitoring
+
+Real-time metrics and NIS2 compliance dashboard:
+
+```bash
+# Quick setup
+./scripts/monitoring-setup.sh
+
+# Or manually
+docker-compose -f docker-compose.yml -f docker-compose.monitoring.yml up -d
+```
+
+Access:
+- **Grafana**: http://localhost:3000 (admin/admin)
+- **Prometheus**: http://localhost:9090
+
+Pre-configured NIS2 dashboard includes:
+- Request rate and error percentage
+- Backup age monitoring
+- System resource usage
+
 ## 📁 Project Structure
 
 ```
 infrastructure/
-├── docker-compose.yml          # Base stack (4 services)
-├── docker-compose.prod.yml     # Production overrides
-├── docker-compose.elk.yml      # ELK observability stack
+├── docker-compose.yml              # Base stack (5 services)
+├── docker-compose.prod.yml         # Production overrides
+├── docker-compose.elk.yml          # ELK observability
+├── docker-compose.monitoring.yml   # Prometheus + Grafana
+├── docker-compose.test.yml         # Integration testing
+│
+├── crypto-replicator/              # 🔐 Encrypted Twin service
+│   ├── crypto_replicator/          # Python modules
+│   │   ├── crypto.py               # AES + RSA encryption
+│   │   ├── listener.py             # PostgreSQL CDC
+│   │   └── sender.py               # Cloud API client
+│   ├── mock_cloud/                 # Test receiver
+│   ├── tests/                      # Unit + integration tests
+│   ├── Dockerfile
+│   └── README.md
+│
 ├── monitoring/
-│   ├── fluent-bit.conf         # Default log config
-│   ├── fluent-bit.elk.conf     # Elasticsearch output
-│   ├── parsers.conf            # JSON/CEF parsers
-│   └── add_timestamp.lua       # Timestamp helper
+│   ├── fluent-bit.conf             # Default log config
+│   ├── prometheus.yml              # Prometheus config
+│   ├── alert_rules.yml             # NIS2 alerts
+│   └── grafana/                    # Dashboards + datasources
+│
 ├── scripts/
-│   ├── restore-test.sh         # DR validation
-│   └── elk-setup.sh            # ELK quick start
-├── examples/
-│   ├── Dockerfile              # Sample Django build
-│   └── requirements.txt        # Python deps
-└── (docs: README, LICENSE, etc.)
+│   ├── restore-test.sh             # DR validation (GPG support)
+│   ├── elk-setup.sh                # ELK quick start
+│   └── monitoring-setup.sh         # Grafana quick start
+│
+└── examples/                       # Sample Django setup
 ```
 
 ## 🔐 NIS2 Compliance Matrix

@@ -1,0 +1,321 @@
+openapi: 3.0.3
+info:
+  title: NIS2Shield Cloud Receiver API
+  description: |
+    API specification for receiving encrypted envelopes from the Crypto-Replicator.
+    
+    **Purpose**: This API defines the contract that cloud backup receivers must implement
+    to store encrypted data from NIS2Shield deployments.
+    
+    **Security Model**: The receiver stores encrypted data but CANNOT decrypt it.
+    Only the private key holder (kept offline) can decrypt during disaster recovery.
+  version: 1.0.0
+  contact:
+    name: NIS2Shield Team
+    url: https://nis2shield.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://backup.example.com/api/v1
+    description: Production cloud backup
+  - url: http://localhost:8080
+    description: Local mock receiver
+
+tags:
+  - name: Envelopes
+    description: Encrypted envelope operations
+  - name: Health
+    description: Service health checks
+
+paths:
+  /health:
+    get:
+      tags: [Health]
+      summary: Health check
+      description: Check if the service is running and accepting requests.
+      operationId: healthCheck
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              example:
+                status: healthy
+                envelopes_received: 1234
+                timestamp: "2024-12-27T09:00:00Z"
+
+  /envelopes:
+    post:
+      tags: [Envelopes]
+      summary: Receive encrypted envelope
+      description: |
+        Receive and store an encrypted envelope from a Crypto-Replicator instance.
+        
+        The payload is encrypted using hybrid encryption:
+        - Data encrypted with AES-256-GCM
+        - AES key wrapped with RSA-OAEP using the receiver's public key
+        
+        **Important**: The receiver CANNOT decrypt this data. Store as-is.
+      operationId: receiveEnvelope
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EncryptedEnvelope'
+            example:
+              version: "1.0"
+              timestamp: "2024-12-27T09:00:00Z"
+              table: "nis2_audit_log"
+              operation: "INSERT"
+              encrypted_data: "SGVsbG8gV29ybGQhIFRoaXMgaXMgZW5jcnlwdGVkIGRhdGE="
+              encrypted_key: "UlNBIGVuY3J5cHRlZCBBRVMga2V5IGdvZXMgaGVyZQ=="
+              iv: "MTIzNDU2Nzg5MDEy"
+              tag: "QUVTLUdDTSBhdXRoIHRhZw=="
+              key_id: "cloud-backup-2024"
+      responses:
+        '201':
+          description: Envelope accepted and stored
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AcceptedResponse'
+        '400':
+          description: Invalid envelope format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    get:
+      tags: [Envelopes]
+      summary: List envelopes (metadata only)
+      description: List stored envelopes. Only metadata is returned, not encrypted content.
+      operationId: listEnvelopes
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+            maximum: 1000
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: table
+          in: query
+          description: Filter by table name
+          schema:
+            type: string
+        - name: since
+          in: query
+          description: Only envelopes after this timestamp
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: List of envelopes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeListResponse'
+
+  /envelopes/{id}:
+    get:
+      tags: [Envelopes]
+      summary: Get single envelope
+      description: Retrieve a specific envelope by ID (for disaster recovery download).
+      operationId: getEnvelope
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Envelope data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EncryptedEnvelope'
+        '404':
+          description: Envelope not found
+
+  /envelopes/bulk:
+    post:
+      tags: [Envelopes]
+      summary: Receive multiple envelopes
+      description: Batch upload for improved throughput.
+      operationId: receiveEnvelopesBulk
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                envelopes:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/EncryptedEnvelope'
+                  maxItems: 100
+              required:
+                - envelopes
+      responses:
+        '201':
+          description: Batch accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accepted:
+                    type: integer
+                  failed:
+                    type: integer
+                  ids:
+                    type: array
+                    items:
+                      type: integer
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: JWT token or API key
+
+  schemas:
+    EncryptedEnvelope:
+      type: object
+      required:
+        - version
+        - timestamp
+        - table
+        - operation
+        - encrypted_data
+        - encrypted_key
+        - iv
+        - tag
+        - key_id
+      properties:
+        version:
+          type: string
+          description: Envelope format version
+          example: "1.0"
+        timestamp:
+          type: string
+          format: date-time
+          description: When the original event occurred
+        table:
+          type: string
+          description: Source database table
+          example: nis2_audit_log
+        operation:
+          type: string
+          enum: [INSERT, UPDATE, DELETE]
+          description: Type of database operation
+        encrypted_data:
+          type: string
+          format: byte
+          description: Base64-encoded AES-GCM ciphertext
+        encrypted_key:
+          type: string
+          format: byte
+          description: Base64-encoded RSA-OAEP wrapped AES key
+        iv:
+          type: string
+          format: byte
+          description: Base64-encoded 12-byte IV for AES-GCM
+        tag:
+          type: string
+          format: byte
+          description: Base64-encoded 16-byte GCM authentication tag
+        key_id:
+          type: string
+          description: Identifier for the RSA key used (for key rotation)
+          example: cloud-backup-2024
+
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+        envelopes_received:
+          type: integer
+        timestamp:
+          type: string
+          format: date-time
+
+    AcceptedResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: accepted
+        id:
+          type: integer
+          description: Unique ID assigned to the envelope
+
+    EnvelopeListResponse:
+      type: object
+      properties:
+        count:
+          type: integer
+        total:
+          type: integer
+        envelopes:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              table:
+                type: string
+              operation:
+                type: string
+              received_at:
+                type: string
+                format: date-time
+              key_id:
+                type: string
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        code:
+          type: string
+        details:
+          type: object
