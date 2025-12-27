@@ -1,0 +1,52 @@
+# Docker Compose for Integration Testing
+# Includes PostgreSQL, Crypto-Replicator, and Mock Cloud Receiver
+
+services:
+  # PostgreSQL with test data
+  db:
+    image: postgres:15-alpine
+    container_name: nis2_test_db
+    environment:
+      - POSTGRES_USER=nis2user
+      - POSTGRES_PASSWORD=testpass123
+      - POSTGRES_DB=nis2_test
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U nis2user -d nis2_test" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "5432:5432"
+
+  # Mock cloud receiver
+  mock-cloud:
+    build: ./crypto-replicator/mock_cloud
+    container_name: nis2_mock_cloud
+    environment:
+      - DEBUG=true
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/health" ]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+
+  # Crypto-Replicator service
+  crypto-replicator:
+    build: ./crypto-replicator
+    container_name: nis2_test_replicator
+    environment:
+      - DATABASE_URL=postgresql://nis2user:testpass123@db:5432/nis2_test
+      - LISTEN_CHANNEL=nis2_changes
+      - CLOUD_API_URL=http://mock-cloud:8080
+      - RSA_PUBLIC_KEY_PATH=/keys/test.pub
+      - DEBUG=true
+      - DRY_RUN=false
+    volumes:
+      - ./crypto-replicator/tests/fixtures/keys:/keys:ro
+    depends_on:
+      db:
+        condition: service_healthy
+      mock-cloud:
+        condition: service_healthy
