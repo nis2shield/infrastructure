@@ -1,0 +1,60 @@
+name: NIS2 Compliance Audit
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: '0 8 * * 1' # Every Monday at 8:00 AM
+
+jobs:
+  # PROBE A & C: Guardrails (Blocking)
+  security-guardrails:
+    name: Security Guardrails
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Required for gitleaks history
+
+      # PROBE C: Secrets Detection (NIS2 Art. 21.2.d)
+      # Blocks PRs if secrets are found
+      - name: Probe C - Gitleaks (Secrets)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          # Fail on any finding
+          fail: true
+
+      # PROBE A: Infrastructure Security (NIS2 Art. 21.2.c/f)
+      # Blocks PRs if CRITICAL/HIGH issues are found in Terraform
+      - name: Probe A - tfsec (Infra)
+        uses: aquasecurity/tfsec-action@v1.0.0
+        with:
+          working_directory: terraform
+          soft_fail: false
+          additional_args: --minimum-severity HIGH
+
+  # PROBE B & D (Reporting - Non-blocking for now, will implement later)
+  compliance-reporter:
+    name: Compliance Reporter
+    needs: [security-guardrails]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'push'
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Placeholder for Week 2 & 3
+        run: echo "Reporting logic to be implemented in Week 3"
