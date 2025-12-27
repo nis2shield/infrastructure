@@ -51,6 +51,24 @@ services:
     depends_on:
       - db
 
+  # Encrypted cloud replication (Disaster Recovery)
+  crypto-replicator:
+    build: ./crypto-replicator
+    container_name: nis2_crypto_replicator
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=postgres://${POSTGRES_USER:-nis2user}:${POSTGRES_PASSWORD:-changeme}@db:5432/${POSTGRES_DB:-nis2_app}
+      - LISTEN_CHANNEL=${CDC_CHANNEL:-nis2_changes}
+      - CLOUD_API_URL=${CLOUD_BACKUP_URL:-}
+      - CLOUD_API_TOKEN=${CLOUD_BACKUP_TOKEN:-}
+      - RSA_PUBLIC_KEY_PATH=/keys/cloud.pub
+      - DEBUG=${DEBUG:-false}
+      - DRY_RUN=${DRY_RUN:-true} # Safe default
+    volumes:
+      - ./keys:/keys:ro
+    depends_on:
+      - db
+
   db:
     image: postgres:15-alpine
     volumes:
