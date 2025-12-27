@@ -16,6 +16,8 @@ This repository provides the "last mile" for NIS2 compliance: **secure infrastru
 - 📊 **Log Segregation**: Logs exported via sidecar (Fluent Bit)
 - 💾 **Automated Backups**: PostgreSQL dumps with retention policy
 - 🔐 **Encrypted Twin**: Zero-trust cloud backup (AES-256 + RSA)
+- 🛡️ **Compliance Engine**: Automated `tfsec` & `gitleaks` checks in CI/CD
+- 📈 **Dynamic Reporting**: Updates `NIS2_SELF_ASSESSMENT.md` automatically
 - ☸️ **Kubernetes Ready**: Production Helm chart with NetworkPolicies
 - ☁️ **Multi-Cloud**: Terraform modules for AWS, GCP, Azure
 - 🏗️ **NIS2 Compliant**: Addresses Art. 21 infrastructure requirements
@@ -84,7 +86,24 @@ sequenceDiagram
 - 🔄 **Forward Secrecy** - Unique session key per message
 - ☁️ **Zero-Trust Cloud** - Cloud cannot read your data
 
+### 🛡️ Compliance as Code Engine (New)
+
+We moved from **Declarative** to **Demonstrable** compliance.
+
+1.  **Guardrails (Week 1)**: `tfsec` and `gitleaks` run on every PR.
+    *   ❌ **Blocks** unencrypted S3 buckets.
+    *   ❌ **Blocks** hardcoded secrets.
+2.  **Reporter (Week 2 & 3)**:
+    *   `audit-engine/probes/log_analyzer.py` verifies operational continuity (e.g., did backups run?).
+    *   `audit-engine/main.py` updates [docs/NIS2_SELF_ASSESSMENT.md](docs/NIS2_SELF_ASSESSMENT.md) automatically.
+
+**Run Auditor Locally:**
+```bash
+python3 audit-engine/main.py --report-file docs/NIS2_SELF_ASSESSMENT.md
+```
+
 ## 🚀 Quick Start
+
 
 ### Prerequisites
 
