@@ -109,20 +109,45 @@ The script will:
 
 Keep the generated report for your NIS2 audit documentation.
 
+## 📊 ELK Stack (Elasticsearch + Kibana)
+
+Visualize your NIS2 logs in a beautiful dashboard:
+
+```bash
+# Quick setup (starts ES + Kibana + configures index)
+./scripts/elk-setup.sh
+
+# Or manually
+docker-compose -f docker-compose.yml -f docker-compose.elk.yml up -d
+```
+
+Once running:
+- **Kibana**: http://localhost:5601
+- **Elasticsearch**: http://localhost:9200
+
+Go to Kibana → Analytics → Discover → Select "NIS2 Logs" to see your logs.
+
+> **Note**: ELK requires ~1.5GB RAM. Use the base stack for low-memory systems.
+
 ## 📁 Project Structure
 
 ```
 infrastructure/
-├── docker-compose.yml      # Service orchestration
-├── .env.example            # Environment template
+├── docker-compose.yml          # Base stack (4 services)
+├── docker-compose.prod.yml     # Production overrides
+├── docker-compose.elk.yml      # ELK observability stack
 ├── monitoring/
-│   ├── fluent-bit.conf     # Log collector config
-│   └── parsers.conf        # JSON/CEF parsers
-├── backups/                # Auto-created, gitignored
-├── LICENSE
-├── CONTRIBUTING.md
-├── CODE_OF_CONDUCT.md
-└── SECURITY.md
+│   ├── fluent-bit.conf         # Default log config
+│   ├── fluent-bit.elk.conf     # Elasticsearch output
+│   ├── parsers.conf            # JSON/CEF parsers
+│   └── add_timestamp.lua       # Timestamp helper
+├── scripts/
+│   ├── restore-test.sh         # DR validation
+│   └── elk-setup.sh            # ELK quick start
+├── examples/
+│   ├── Dockerfile              # Sample Django build
+│   └── requirements.txt        # Python deps
+└── (docs: README, LICENSE, etc.)
 ```
 
 ## 🔐 NIS2 Compliance Matrix

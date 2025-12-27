@@ -26,11 +26,12 @@ Roadmap for the infrastructure component of the NIS2 Shield ecosystem.
 - Restores and validates data
 - Auditor-friendly compliance proof
 
-### ELK Stack Integration (Planned)
-- [ ] Docker Compose profile: `docker-compose --profile elk up`
-- [ ] Pre-configured Elasticsearch + Kibana
-- [ ] Fluent Bit → Elasticsearch pipeline
-- [ ] Sample Kibana dashboard for NIS2 logs
+### ELK Stack Integration ✅
+- [x] Docker Compose profile: `docker-compose.elk.yml`
+- [x] Elasticsearch 8.11 + Kibana
+- [x] Fluent Bit → Elasticsearch pipeline (`fluent-bit.elk.conf`)
+- [x] Setup script: `scripts/elk-setup.sh`
+- [x] Auto-configure Kibana index pattern
 
 ### Prometheus + Grafana (Planned)
 - [ ] django-prometheus integration guide
