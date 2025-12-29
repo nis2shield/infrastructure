@@ -8,4 +8,5 @@ urlpatterns = [
     path('spam/', views.spam, name='spam'),
     path('protected/', views.protected, name='protected'),
     path('mfa/verify/', views.mfa_verify, name='mfa_verify'),
+    path('health/', views.health, name='health'),
 ]

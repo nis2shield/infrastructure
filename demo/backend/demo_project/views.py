@@ -1,4 +1,4 @@
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.contrib.auth.decorators import login_required
 
 def home(request):
@@ -18,3 +18,4 @@ def mfa_verify(request):
         next_url = request.GET.get('next', '/admin/')
         return HttpResponse(f"<h1>MFA Verified!</h1><a href='{next_url}'>Continue</a>")
     return HttpResponse("<h1>MFA Verification Needed</h1><form method='post'><button>Verify MFA</button></form>")
+\n\ndef health(request):\n    return JsonResponse({'status': 'ok'})
