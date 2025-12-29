@@ -18,6 +18,9 @@ COPY . .
 # Collect static files
 RUN python manage.py collectstatic --noinput
 
+# Run migrations to create SQLite DB in the image
+RUN python manage.py migrate
+
 # Create non-root user
 RUN useradd -m -u 1000 appuser
 USER appuser
