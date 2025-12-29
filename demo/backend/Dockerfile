@@ -30,6 +30,10 @@ RUN python -c "import os; os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'demo_
 
 # Create non-root user
 RUN useradd -m -u 1000 appuser
+
+# Fix permissions: Ensure appuser owns the database and the directory
+RUN chown -R appuser:appuser /app
+
 USER appuser
 
 # Railway uses PORT env variable
