@@ -21,6 +21,13 @@ RUN python manage.py collectstatic --noinput
 # Run migrations to create SQLite DB in the image
 RUN python manage.py migrate
 
+# Create demo superuser without interactive input
+# We use a quick python script to avoid putting passwords in shell history or env vars
+RUN python -c "import os; os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'demo_project.settings'); import django; django.setup(); \
+    from django.contrib.auth import get_user_model; User = get_user_model(); \
+    User.objects.filter(username='demo').exists() or \
+    User.objects.create_superuser('demo', 'demo@nis2shield.com', 'Nis2Demo2024!')"
+
 # Create non-root user
 RUN useradd -m -u 1000 appuser
 USER appuser
