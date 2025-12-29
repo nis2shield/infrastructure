@@ -22,6 +22,9 @@ RUN python manage.py collectstatic --noinput
 RUN useradd -m -u 1000 appuser
 USER appuser
 
-EXPOSE 8000
+# Railway uses PORT env variable
+ENV PORT=8000
+EXPOSE $PORT
 
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "2", "demo_project.wsgi:application"]
+# Use shell form to expand $PORT variable
+CMD gunicorn --bind 0.0.0.0:$PORT --workers 2 demo_project.wsgi:application
