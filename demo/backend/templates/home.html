@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NIS2 Shield Demo | Active Protection</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .glass {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .ping-circle {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 2px solid #2dd4bf;
+            animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+            opacity: 0.5;
+        }
+
+        @keyframes ping {
+
+            75%,
+            100% {
+                transform: scale(2);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+
+<body
+    class="bg-slate-900 text-slate-300 min-h-screen flex flex-col items-center justify-center p-6 relative overflow-hidden">
+
+    <!-- Background Decoration -->
+    <div class="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
+        <div class="absolute top-20 left-1/4 w-96 h-96 bg-teal-500/10 rounded-full blur-[100px]"></div>
+        <div class="absolute bottom-20 right-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-[100px]"></div>
+    </div>
+
+    <!-- Main Card -->
+    <div class="glass max-w-4xl w-full rounded-2xl p-8 relative z-10 shadow-2xl shadow-black/50">
+
+        <!-- Header -->
+        <header class="flex items-center justify-between mb-12 border-b border-slate-700 pb-6">
+            <div class="flex items-center gap-3">
+                <div
+                    class="w-10 h-10 bg-teal-500 rounded-lg flex items-center justify-center shadow-lg shadow-teal-500/20">
+                    <i data-lucide="shield-check" class="text-white w-6 h-6"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold text-white tracking-tight">NIS2<span
+                            class="text-teal-400">Shield</span> Demo</h1>
+                    <div class="text-xs text-slate-400 font-mono flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                        SYSTEM ACTIVE
+                    </div>
+                </div>
+            </div>
+            <div class="font-mono text-xs text-slate-500 text-right">
+                <div>HOST: nis2-shield-demo</div>
+                <div id="clock">--:--:-- UTC</div>
+            </div>
+        </header>
+
+        <!-- Status Grid -->
+        <div class="grid md:grid-cols-2 gap-6 mb-12">
+            <!-- Active Controls -->
+            <div class="bg-slate-800/50 rounded-xl p-6 border border-slate-700">
+                <h3 class="text-white font-semibold mb-4 flex items-center gap-2">
+                    <i data-lucide="activity" class="text-teal-400 w-4 h-4"></i>
+                    Active Controls (Middleware)
+                </h3>
+                <ul class="space-y-3 font-mono text-sm">
+                    <li class="flex justify-between items-center">
+                        <span class="text-slate-400">Forensic Logging</span>
+                        <span class="text-green-400 bg-green-900/20 px-2 py-0.5 rounded text-xs">ENFORCED</span>
+                    </li>
+                    <li class="flex justify-between items-center">
+                        <span class="text-slate-400">Rate Limiting</span>
+                        <span class="text-green-400 bg-green-900/20 px-2 py-0.5 rounded text-xs">ACTIVE</span>
+                    </li>
+                    <li class="flex justify-between items-center">
+                        <span class="text-slate-400">Session Guard</span>
+                        <span class="text-green-400 bg-green-900/20 px-2 py-0.5 rounded text-xs">MONITORING</span>
+                    </li>
+                    <li class="flex justify-between items-center">
+                        <span class="text-slate-400">Tor Blocker</span>
+                        <span class="text-green-400 bg-green-900/20 px-2 py-0.5 rounded text-xs">ENABLED</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Test Scenarios -->
+            <div class="bg-slate-800/50 rounded-xl p-6 border border-slate-700">
+                <h3 class="text-white font-semibold mb-4 flex items-center gap-2">
+                    <i data-lucide="flask-conical" class="text-purple-400 w-4 h-4"></i>
+                    Test Scenarios
+                </h3>
+                <div class="space-y-3">
+                    <a href="/spam/"
+                        class="block p-3 rounded bg-slate-700/50 hover:bg-slate-700 transition flex justify-between items-center group">
+                        <span class="text-slate-300 text-sm">DoS Simulation (Rate Limit)</span>
+                        <i data-lucide="arrow-right" class="w-4 h-4 text-slate-500 group-hover:text-teal-400"></i>
+                    </a>
+                    <a href="/health/"
+                        class="block p-3 rounded bg-slate-700/50 hover:bg-slate-700 transition flex justify-between items-center group">
+                        <span class="text-slate-300 text-sm">Infrastructure Healthcheck</span>
+                        <i data-lucide="arrow-right" class="w-4 h-4 text-slate-500 group-hover:text-teal-400"></i>
+                    </a>
+                    <a href="/admin/login/"
+                        class="block p-3 rounded bg-slate-700/50 hover:bg-slate-700 transition flex justify-between items-center group">
+                        <span class="text-slate-300 text-sm">Secure Login (Forensics)</span>
+                        <i data-lucide="arrow-right" class="w-4 h-4 text-slate-500 group-hover:text-teal-400"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Compliance Matrix -->
+        <div class="bg-black/20 rounded-xl p-6 border border-slate-800 font-mono text-xs">
+            <div class="flex justify-between items-center mb-4">
+                <span class="text-slate-500">COMPLIANCE_MATRIX_V2</span>
+                <span class="text-green-500">STATUS: GREEN</span>
+            </div>
+            <div class="grid grid-cols-4 gap-2 text-center text-slate-500">
+                <div class="bg-slate-800/40 p-2 rounded border border-green-900/30 text-green-400/80">ART.21.a</div>
+                <div class="bg-slate-800/40 p-2 rounded border border-green-900/30 text-green-400/80">ART.21.c</div>
+                <div class="bg-slate-800/40 p-2 rounded border border-green-900/30 text-green-400/80">ART.21.d</div>
+                <div class="bg-slate-800/40 p-2 rounded border border-green-900/30 text-green-400/80">ART.21.f</div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="mt-8 text-center text-xs text-slate-600">
+            Powered by <a href="https://github.com/nis2shield/django-nis2-shield"
+                class="hover:text-teal-400 underline">django-nis2-shield v0.3.0</a>
+            <br>
+            Running on Railway • Python 3.11 • Docker
+        </footer>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('clock').innerText = now.toISOString().split('T')[1].split('.')[0] + ' UTC';
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+    </script>
+</body>
+
+</html>

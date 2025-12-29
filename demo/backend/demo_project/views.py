@@ -1,8 +1,9 @@
+from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 from django.contrib.auth.decorators import login_required
 
 def home(request):
-    return HttpResponse("<h1>NIS2 Shield Demo</h1><p>Welcome to the public area.</p>")
+    return render(request, 'home.html')
 
 def spam(request):
     return HttpResponse("<h1>Spam Me!</h1><p>Refresh this page to test Rate Limiting.</p>")
