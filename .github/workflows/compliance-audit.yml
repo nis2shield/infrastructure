@@ -7,9 +7,10 @@ on:
     branches: [ main ]
   schedule:
     - cron: '0 8 * * 1' # Every Monday at 8:00 AM
+  workflow_dispatch: # Manual trigger
 
 jobs:
-  # PROBE A & C: Guardrails (Blocking)
+  # PROBE A & C: Security Guardrails (Blocking)
   security-guardrails:
     name: Security Guardrails
     runs-on: ubuntu-latest
@@ -23,30 +24,63 @@ jobs:
           fetch-depth: 0 # Required for gitleaks history
 
       # PROBE C: Secrets Detection (NIS2 Art. 21.2.d)
-      # Blocks PRs if secrets are found
       - name: Probe C - Gitleaks (Secrets)
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          # Fail on any finding
           fail: true
 
-      # PROBE A: Infrastructure Security (NIS2 Art. 21.2.c/f)
-      # Blocks PRs if CRITICAL/HIGH issues are found in Terraform
+      # PROBE A: Infrastructure Security (NIS2 Art. 21.2.f)
       - name: Probe A - tfsec (Infra)
         uses: aquasecurity/tfsec-action@v1.0.0
         with:
           working_directory: terraform
           soft_fail: false
-          additional_args: --minimum-severity HIGH
+          additional_args: --minimum-severity HIGH --format json --out tfsec-results.json
+      
+      - name: Upload tfsec results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tfsec-results
+          path: terraform/tfsec-results.json
 
-  # PROBE B & D (Reporting - Non-blocking for now, will implement later)
+  # PROBE B: Supply Chain Scanning (Trivy)
+  supply-chain-scan:
+    name: Supply Chain Scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      
+      # Probe B: Trivy for vulnerabilities (NIS2 Art. 21.2.d)
+      - name: Probe B - Trivy (Supply Chain)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          severity: 'CRITICAL,HIGH'
+          format: 'json'
+          output: 'trivy-results.json'
+          exit-code: '1' # Fail on CRITICAL
+      
+      - name: Upload Trivy results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: trivy-results
+          path: trivy-results.json
+
+  # Compliance Reporter (Updates documentation)
   compliance-reporter:
     name: Compliance Reporter
-    needs: [security-guardrails]
+    needs: [security-guardrails, supply-chain-scan]
     runs-on: ubuntu-latest
-    if: github.event_name == 'schedule' || github.event_name == 'push'
+    if: github.event_name == 'schedule' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     permissions:
       contents: write
       issues: write
@@ -55,6 +89,35 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-
-      - name: Placeholder for Week 2 & 3
-        run: echo "Reporting logic to be implemented in Week 3"
+      
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          pip install requests
+      
+      - name: Run Compliance Engine
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd audit-engine
+          python main.py \
+            --report-file ../docs/NIS2_SELF_ASSESSMENT.md \
+            --tfsec-json ../tfsec-results.json \
+            --summary
+      
+      - name: Commit updated report
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: Update NIS2 self-assessment (automated)"
+          file_pattern: docs/NIS2_SELF_ASSESSMENT.md
+          commit_user_name: NIS2 Compliance Bot
+          commit_user_email: compliance@nis2shield.com
