@@ -27,9 +27,15 @@ docker compose up -d
 # - API Docs: http://localhost:8000/api/docs/
 ```
 
-### Option 2: One-Click Deploy
+### Option 2: Deploy to Railway (One-Click)
 
-[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/nis2shield)
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new/template?template=https://github.com/nis2shield/infrastructure/tree/main/demo)
+
+After deployment:
+1. Go to your Railway dashboard
+2. Click on the backend service
+3. Copy the public URL
+4. Use it as API endpoint in your frontend
 
 ## Demo Features
 

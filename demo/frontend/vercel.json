@@ -1,0 +1,26 @@
+{
+    "name": "nis2-shield-demo-frontend",
+    "version": 2,
+    "builds": [
+        {
+            "src": "package.json",
+            "use": "@vercel/static-build",
+            "config": {
+                "distDir": "dist"
+            }
+        }
+    ],
+    "routes": [
+        {
+            "src": "/api/(.*)",
+            "dest": "https://nis2-demo-api.railway.app/api/$1"
+        },
+        {
+            "src": "/(.*)",
+            "dest": "/$1"
+        }
+    ],
+    "env": {
+        "VITE_API_URL": "https://nis2-demo-api.railway.app"
+    }
+}
