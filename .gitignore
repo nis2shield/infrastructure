@@ -34,3 +34,5 @@ temp/
 audit-engine/
 Compliance*.md
 *Investment*.pdf
+demo/backend/db.sqlite3
+*.sqlite3
