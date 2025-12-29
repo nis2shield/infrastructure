@@ -27,4 +27,7 @@ ENV PORT=8000
 EXPOSE $PORT
 
 # Use shell form to expand $PORT variable
-CMD gunicorn --bind 0.0.0.0:$PORT --workers 2 demo_project.wsgi:application
+# --access-logfile - : Log to stdout
+# --error-logfile -  : Log to stderr
+# --log-level debug  : Verbose logging
+CMD gunicorn --bind 0.0.0.0:$PORT --workers 2 --access-logfile - --error-logfile - --log-level debug demo_project.wsgi:application
