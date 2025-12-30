@@ -1,0 +1,97 @@
+# Docker Compose Example for Spring Boot + NIS2 Spring Shield
+#
+# This example shows how to deploy a Spring Boot application with NIS2 Shield
+# using the same infrastructure stack as Django applications.
+#
+# Usage:
+#   cp examples/docker-compose.spring.yml docker-compose.yml
+#   docker-compose up -d
+
+version: '3.8'
+
+services:
+
+  # --- LIVELLO 1: HARDENING (Spring Boot App) ---
+  webapp:
+    # Replace with your Spring Boot image using nis2-spring-shield
+    image: ghcr.io/nis2shield/spring-app:latest
+    container_name: nis2_spring_app
+    restart: always
+    # Security Context: Non-root execution (NIS2 Best Practice)
+    user: "1000:1000"
+    read_only: true
+    tmpfs:
+      - /tmp
+    environment:
+      # NIS2 Spring Shield Configuration
+      - NIS2_ENABLED=true
+      - NIS2_ENCRYPTION_KEY=${NIS2_ENCRYPTION_KEY:-}
+      - NIS2_INTEGRITY_KEY=${NIS2_INTEGRITY_KEY:-}
+      - NIS2_LOGGING_ENABLED=true
+      - NIS2_LOGGING_ANONYMIZE_IP=true
+      - NIS2_ACTIVE_DEFENSE_RATE_LIMIT_ENABLED=true
+      - NIS2_SECURITY_HEADERS_ENABLED=true
+      # Spring Boot settings
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/${POSTGRES_DB:-nis2_app}
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER:-nis2user}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD:-changeme}
+      # Log to shared volume for Fluent Bit
+      - LOGGING_FILE_NAME=/var/log/shared/app.json
+    volumes:
+      - shared-logs:/var/log/shared
+    depends_on:
+      - db
+      - log-collector
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # --- LIVELLO 2: LOG COLLECTOR (Fluent Bit Sidecar) ---
+  # Same configuration as Django - JSON format is identical
+  log-collector:
+    image: fluent/fluent-bit:latest
+    container_name: nis2_logger
+    volumes:
+      - shared-logs:/var/log/shared:ro
+      - ./monitoring/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf:ro
+    environment:
+      - LOG_DESTINATION_HOST=${SIEM_HOST:-}
+      - ENVIRONMENT=${ENVIRONMENT:-production}
+
+  # --- LIVELLO 3: RESILIENZA (Backup Sidecar) ---
+  db-backup:
+    image: prodrigestivill/postgres-backup-local
+    container_name: nis2_backup
+    volumes:
+      - ./backups:/backups
+    environment:
+      - POSTGRES_HOST=db
+      - POSTGRES_DB=${POSTGRES_DB:-nis2_app}
+      - POSTGRES_USER=${POSTGRES_USER:-nis2user}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-changeme}
+      - SCHEDULE=@every 6h00m
+      - BACKUP_KEEP_DAYS=7
+    depends_on:
+      - db
+
+  # --- DATABASE ---
+  db:
+    image: postgres:15-alpine
+    container_name: nis2_db
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-nis2_app}
+      - POSTGRES_USER=${POSTGRES_USER:-nis2user}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-changeme}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-nis2user}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  shared-logs:
+  db_data:

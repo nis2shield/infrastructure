@@ -8,7 +8,9 @@
 
 **Secure-by-Design Infrastructure for NIS2 Compliance.**
 
-This repository provides the "last mile" for NIS2 compliance: **secure infrastructure**. Deploy with Docker Compose, Helm (Kubernetes), or Terraform (Cloud). While [django-nis2-shield](https://github.com/nis2shield/django-nis2-shield) and [@nis2shield/react-guard](https://github.com/nis2shield/react-guard) protect your code, this kit protects the **execution environment**.
+This repository provides the "last mile" for NIS2 compliance: **secure infrastructure**. Deploy with Docker Compose, Helm (Kubernetes), or Terraform (Cloud). While [django-nis2-shield](https://github.com/nis2shield/django-nis2-shield), [nis2-spring-shield](https://github.com/nis2shield/nis2-spring-shield), and [@nis2shield/react-guard](https://github.com/nis2shield/react-guard) protect your code, this kit protects the **execution environment**.
+
+> **🎉 Now supports both Django and Spring Boot applications!** Same JSON log format, same infrastructure.
 
 ## ✨ Features
 
@@ -29,7 +31,7 @@ This repository provides the "last mile" for NIS2 compliance: **secure infrastru
 ```mermaid
 graph TB
     subgraph Docker["Docker Compose Stack"]
-        webapp["🐍 webapp<br/>(Django App)"]
+        webapp["🐍/☕ webapp<br/>(Django or Spring Boot)"]
         logs["📊 log-collector<br/>(Fluent Bit)"]
         backup["💾 db-backup<br/>(Cron)"]
         db[(PostgreSQL)]
@@ -47,6 +49,8 @@ graph TB
     style backup fill:#f59e0b
     style db fill:#8b5cf6
 ```
+
+> **Note**: The JSON log format is identical for both Django and Spring Boot applications, ensuring seamless interoperability.
 
 ### Security Features
 
@@ -108,7 +112,9 @@ This infrastructure is designed to support the **NIS2Shield** business model:
 ### Prerequisites
 
 - Docker & Docker Compose v2+
-- A Docker image of your Django app using `django-nis2-shield`
+- A Docker image of your application using:
+  - **Django**: [django-nis2-shield](https://github.com/nis2shield/django-nis2-shield)
+  - **Spring Boot**: [nis2-spring-shield](https://github.com/nis2shield/nis2-spring-shield)
 
 ### Installation
 
@@ -134,10 +140,12 @@ docker-compose ps
 
 ### 1. webapp (Application Layer)
 
-Your Django application, hardened with:
+Your Django or Spring Boot application, hardened with:
 - `user: 1000:1000` - Non-root execution
 - `read_only: true` - Immutable filesystem
 - `tmpfs: /tmp` - RAM-only writable directory
+
+> **Spring Boot**: See `examples/docker-compose.spring.yml` for a Spring-specific example.
 
 ### 2. log-collector (Fluent Bit Sidecar)
 
@@ -316,7 +324,8 @@ BACKUP_KEEP_DAYS=7      # Keep 7 days
 
 ## 🤝 Related Projects
 
-- [django-nis2-shield](https://github.com/nis2shield/django-nis2-shield) - Backend middleware
+- [django-nis2-shield](https://github.com/nis2shield/django-nis2-shield) - Django middleware for NIS2 compliance
+- [nis2-spring-shield](https://github.com/nis2shield/nis2-spring-shield) - Spring Boot starter for NIS2 compliance ✨ NEW
 - [@nis2shield/react-guard](https://github.com/nis2shield/react-guard) - Frontend protection
 - [nis2shield.com](https://nis2shield.com) - Documentation hub
 
