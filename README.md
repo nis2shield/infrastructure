@@ -13,9 +13,9 @@ This repository provides the "last mile" for NIS2 compliance: **secure infrastru
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                        Frontend                              │
-│  @nis2shield/react-guard                                    │
+│  @nis2shield/{react,angular,vue}-guard                      │
 │  ├── SessionWatchdog (idle detection)                       │
-│  ├── AuditBoundary (crash reports)                         │
+│  ├── AuditBoundary / SecureStorage                         │
 │  └── → POST /api/nis2/telemetry/                           │
 └─────────────────────────────────────────────────────────────┘
                             │
@@ -38,7 +38,7 @@ This repository provides the "last mile" for NIS2 compliance: **secure infrastru
 └─────────────────────────────────────────────────────────────┘
 ```
 
-> **🎉 Now supports Django, Spring Boot, and .NET applications!** Same JSON log format, same infrastructure.
+> **🎉 Full-Stack Support!** Backend: Django, Spring Boot, Express, .NET. Frontend: React, Angular, Vue. Same JSON log format, same infrastructure.
 
 ## ✨ Features
 
@@ -353,10 +353,18 @@ BACKUP_KEEP_DAYS=7      # Keep 7 days
 
 ## 🤝 Related Projects
 
+**Backend Middleware:**
 - [django-nis2-shield](https://github.com/nis2shield/django-nis2-shield) - Django middleware for NIS2 compliance
 - [nis2-spring-shield](https://github.com/nis2shield/nis2-spring-shield) - Spring Boot starter for NIS2 compliance
-- [dotnet-nis2-shield](https://github.com/nis2shield/dotnet-nis2-shield) - ASP.NET Core middleware ✨ NEW
-- [@nis2shield/react-guard](https://github.com/nis2shield/react-guard) - Frontend protection
+- [@nis2shield/express-middleware](https://github.com/nis2shield/express-nis2-middleware) - Express.js middleware
+- [dotnet-nis2-shield](https://github.com/nis2shield/dotnet-nis2-shield) - ASP.NET Core middleware
+
+**Frontend Guards:**
+- [@nis2shield/react-guard](https://www.npmjs.com/package/@nis2shield/react-guard) - React 18+ client-side protection
+- [@nis2shield/angular-guard](https://www.npmjs.com/package/@nis2shield/angular-guard) - Angular 14+ client-side protection
+- [@nis2shield/vue-guard](https://www.npmjs.com/package/@nis2shield/vue-guard) - Vue 3 client-side protection
+
+**Resources:**
 - [nis2shield.com](https://nis2shield.com) - Documentation hub
 
 ## 📄 License
