@@ -8,7 +8,7 @@
 
 **Secure-by-Design Infrastructure for NIS2 Compliance.**
 
-This repository provides the "last mile" for NIS2 compliance: **secure infrastructure**. Deploy with Docker Compose, Helm (Kubernetes), or Terraform (Cloud). While [django-nis2-shield](https://github.com/nis2shield/django-nis2-shield), [nis2-spring-shield](https://github.com/nis2shield/nis2-spring-shield), and [@nis2shield/react-guard](https://github.com/nis2shield/react-guard) protect your code, this kit protects the **execution environment**.
+This repository provides the "last mile" for NIS2 compliance: **secure infrastructure**. Deploy with Docker Compose, Helm (Kubernetes), or Terraform (Cloud). While [django-nis2-shield](https://github.com/nis2shield/django-nis2-shield), [nis2-spring-shield](https://github.com/nis2shield/nis2-spring-shield), [dotnet-nis2-shield](https://github.com/nis2shield/dotnet-nis2-shield), and [@nis2shield/react-guard](https://github.com/nis2shield/react-guard) protect your code, this kit protects the **execution environment**.
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -22,7 +22,7 @@ This repository provides the "last mile" for NIS2 compliance: **secure infrastru
                             ▼
 ┌─────────────────────────────────────────────────────────────┐
 │                  Backend (NIS2 Adapter)                      │
-│  Supported: Django, Express, Spring Boot                    │
+│  Supported: Django, Express, Spring Boot, .NET            │
 │  ├── ForensicLogger (HMAC signed logs)                     │
 │  ├── RateLimiter, SessionGuard, TorBlocker                 │
 │  └── → SIEM (Elasticsearch, Splunk, QRadar, etc.)          │
@@ -38,7 +38,7 @@ This repository provides the "last mile" for NIS2 compliance: **secure infrastru
 └─────────────────────────────────────────────────────────────┘
 ```
 
-> **🎉 Now supports both Django and Spring Boot applications!** Same JSON log format, same infrastructure.
+> **🎉 Now supports Django, Spring Boot, and .NET applications!** Same JSON log format, same infrastructure.
 
 ## ✨ Features
 
@@ -59,7 +59,7 @@ This repository provides the "last mile" for NIS2 compliance: **secure infrastru
 ```mermaid
 graph TB
     subgraph Docker["Docker Compose Stack"]
-        webapp["🐍/☕ webapp<br/>(Django or Spring Boot)"]
+        webapp["🐍/☕/C# webapp<br/>(Django / Spring / .NET)"]
         logs["📊 log-collector<br/>(Fluent Bit)"]
         backup["💾 db-backup<br/>(Cron)"]
         db[(PostgreSQL)]
@@ -143,6 +143,7 @@ This infrastructure is designed to support the **NIS2Shield** business model:
 - A Docker image of your application using:
   - **Django**: [django-nis2-shield](https://github.com/nis2shield/django-nis2-shield)
   - **Spring Boot**: [nis2-spring-shield](https://github.com/nis2shield/nis2-spring-shield)
+  - **.NET**: [dotnet-nis2-shield](https://github.com/nis2shield/dotnet-nis2-shield)
 
 ### Installation
 
@@ -168,7 +169,7 @@ docker-compose ps
 
 ### 1. webapp (Application Layer)
 
-Your Django or Spring Boot application, hardened with:
+Your Django, Spring Boot, or .NET application, hardened with:
 - `user: 1000:1000` - Non-root execution
 - `read_only: true` - Immutable filesystem
 - `tmpfs: /tmp` - RAM-only writable directory
@@ -353,7 +354,8 @@ BACKUP_KEEP_DAYS=7      # Keep 7 days
 ## 🤝 Related Projects
 
 - [django-nis2-shield](https://github.com/nis2shield/django-nis2-shield) - Django middleware for NIS2 compliance
-- [nis2-spring-shield](https://github.com/nis2shield/nis2-spring-shield) - Spring Boot starter for NIS2 compliance ✨ NEW
+- [nis2-spring-shield](https://github.com/nis2shield/nis2-spring-shield) - Spring Boot starter for NIS2 compliance
+- [dotnet-nis2-shield](https://github.com/nis2shield/dotnet-nis2-shield) - ASP.NET Core middleware ✨ NEW
 - [@nis2shield/react-guard](https://github.com/nis2shield/react-guard) - Frontend protection
 - [nis2shield.com](https://nis2shield.com) - Documentation hub
 
