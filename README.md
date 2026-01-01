@@ -10,6 +10,34 @@
 
 This repository provides the "last mile" for NIS2 compliance: **secure infrastructure**. Deploy with Docker Compose, Helm (Kubernetes), or Terraform (Cloud). While [django-nis2-shield](https://github.com/nis2shield/django-nis2-shield), [nis2-spring-shield](https://github.com/nis2shield/nis2-spring-shield), and [@nis2shield/react-guard](https://github.com/nis2shield/react-guard) protect your code, this kit protects the **execution environment**.
 
+```
+┌─────────────────────────────────────────────────────────────┐
+│                        Frontend                              │
+│  @nis2shield/react-guard                                    │
+│  ├── SessionWatchdog (idle detection)                       │
+│  ├── AuditBoundary (crash reports)                         │
+│  └── → POST /api/nis2/telemetry/                           │
+└─────────────────────────────────────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────────┐
+│                  Backend (NIS2 Adapter)                      │
+│  Supported: Django, Express, Spring Boot                    │
+│  ├── ForensicLogger (HMAC signed logs)                     │
+│  ├── RateLimiter, SessionGuard, TorBlocker                 │
+│  └── → SIEM (Elasticsearch, Splunk, QRadar, etc.)          │
+└─────────────────────────────────────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    Infrastructure                            │
+│  **nis2shield/infrastructure**                              │
+│  ├── Centralized Logging (ELK/Splunk)                       │
+│  ├── Compliance Reporting (Automatic PDF generation)        │
+│  └── Audited Deployment (Terraform/Helm)                    │
+└─────────────────────────────────────────────────────────────┘
+```
+
 > **🎉 Now supports both Django and Spring Boot applications!** Same JSON log format, same infrastructure.
 
 ## ✨ Features
