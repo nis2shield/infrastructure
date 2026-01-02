@@ -1,0 +1,22 @@
+{
+    "name": "nis2-cloud-api",
+    "version": "0.1.0",
+    "private": true,
+    "description": "NIS2 Shield Cloud Signing API - Cloudflare Workers",
+    "main": "src/index.ts",
+    "scripts": {
+        "dev": "wrangler dev",
+        "deploy": "wrangler deploy",
+        "deploy:staging": "wrangler deploy --env staging",
+        "db:migrate": "wrangler d1 execute NIS2_DB --file=./schema.sql",
+        "db:migrate:staging": "wrangler d1 execute NIS2_DB --file=./schema.sql --env staging"
+    },
+    "dependencies": {
+        "hono": "^4.0.0"
+    },
+    "devDependencies": {
+        "@cloudflare/workers-types": "^4.20240000.0",
+        "typescript": "^5.0.0",
+        "wrangler": "^3.0.0"
+    }
+}

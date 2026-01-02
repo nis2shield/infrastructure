@@ -1,0 +1,23 @@
+name = "nis2-cloud-api"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+
+# D1 Database binding
+[[d1_databases]]
+binding = "DB"
+database_name = "nis2-licenses"
+database_id = "REPLACE_WITH_D1_DATABASE_ID"
+
+# Environment variables (secrets set via wrangler secret put)
+[vars]
+ENVIRONMENT = "production"
+
+# Staging environment
+[env.staging]
+name = "nis2-cloud-api-staging"
+[env.staging.vars]
+ENVIRONMENT = "staging"
+[[env.staging.d1_databases]]
+binding = "DB"
+database_name = "nis2-licenses-staging"
+database_id = "REPLACE_WITH_STAGING_D1_DATABASE_ID"
