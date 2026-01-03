@@ -11,8 +11,8 @@ description: |
   - Prometheus + Grafana monitoring (optional)
 
 type: application
-version: 0.3.0
-appVersion: "0.2.5"
+version: 1.0.0
+appVersion: "1.0.0"
 
 home: https://nis2shield.com
 sources:
