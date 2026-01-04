@@ -226,7 +226,7 @@ resource "azurerm_postgresql_flexible_server" "main" {
   }
 
   backup_retention_days        = var.db_backup_retention_days
-  geo_redundant_backup_enabled = false
+  geo_redundant_backup_enabled = var.db_geo_redundant_backup
 
   tags = local.common_tags
 
@@ -279,37 +279,4 @@ resource "azurerm_storage_container" "backups" {
   container_access_type = "private"
 }
 
-# -------------------------------------------------------------------------
-# Outputs
-# -------------------------------------------------------------------------
-output "resource_group_name" {
-  value = azurerm_resource_group.main.name
-}
 
-output "cluster_name" {
-  value = azurerm_kubernetes_cluster.main.name
-}
-
-output "cluster_fqdn" {
-  value = azurerm_kubernetes_cluster.main.fqdn
-}
-
-output "database_fqdn" {
-  value = azurerm_postgresql_flexible_server.main.fqdn
-}
-
-output "database_name" {
-  value = azurerm_postgresql_flexible_server_database.main.name
-}
-
-output "key_vault_name" {
-  value = azurerm_key_vault.main.name
-}
-
-output "backup_storage_account" {
-  value = azurerm_storage_account.backups.name
-}
-
-output "backup_container" {
-  value = azurerm_storage_container.backups.name
-}

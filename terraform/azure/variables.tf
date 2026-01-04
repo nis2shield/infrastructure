@@ -127,3 +127,9 @@ variable "backup_storage_tier" {
   type        = string
   default     = "Hot"
 }
+
+variable "db_geo_redundant_backup" {
+  description = "Enable geo-redundant backup for PostgreSQL"
+  type        = bool
+  default     = true
+}
