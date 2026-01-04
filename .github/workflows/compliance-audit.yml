@@ -76,49 +76,17 @@ jobs:
           name: trivy-results
           path: trivy-results.json
 
-  # Compliance Reporter (Updates documentation)
-  compliance-reporter:
-    name: Compliance Reporter
-    needs: [security-guardrails, supply-chain-scan]
-    runs-on: ubuntu-latest
-    if: github.event_name == 'schedule' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-    permissions:
-      contents: write
-      issues: write
-      pull-requests: write
-    
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-      
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          merge-multiple: true
-      
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-      
-      - name: Install dependencies
-        run: |
-          pip install requests
-      
-      - name: Run Compliance Engine
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          cd audit-engine
-          python main.py \
-            --report-file ../docs/NIS2_SELF_ASSESSMENT.md \
-            --tfsec-json ../tfsec-results.json \
-            --summary
-      
-      - name: Commit updated report
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: "chore: Update NIS2 self-assessment (automated)"
-          file_pattern: docs/NIS2_SELF_ASSESSMENT.md
-          commit_user_name: NIS2 Compliance Bot
-          commit_user_email: compliance@nis2shield.com
+  # ============================================================================
+  # NOTE: Compliance Reporter (Commercial Feature)
+  # ============================================================================
+  # The automated Compliance Engine that generates audit-ready PDF reports
+  # is part of the NIS2 Shield Pro Auditor Kit (commercial product).
+  # 
+  # This open-source repository provides:
+  # - Security guardrails (tfsec, gitleaks, trivy)
+  # - Infrastructure-as-Code templates
+  # - Manual self-assessment checklist (docs/NIS2_SELF_ASSESSMENT.md)
+  #
+  # For automated compliance reporting, see: https://nis2shield.com/pricing
+  # ============================================================================
+
