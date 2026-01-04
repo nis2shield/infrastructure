@@ -19,6 +19,8 @@ paths = [
     '''crypto-replicator/tests/test_key_rotation\.py''',
     # OpenAPI documentation (example values, not real keys)
     '''crypto-replicator/docs/openapi\.yaml''',
+    # Gatekeeper policies (label values, not secrets)
+    '''policies/gatekeeper/.*''',
 ]
 
 # Regex patterns to ignore
