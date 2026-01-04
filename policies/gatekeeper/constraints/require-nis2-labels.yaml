@@ -1,0 +1,27 @@
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sRequiredLabels
+metadata:
+  name: require-nis2-labels
+  annotations:
+    description: "Requires NIS2 compliance tracking labels on all pods"
+spec:
+  # Change to "deny" in production
+  enforcementAction: warn
+  match:
+    kinds:
+      - apiGroups: [""]
+        kinds: ["Pod"]
+      - apiGroups: ["apps"]
+        kinds: ["Deployment", "StatefulSet", "DaemonSet"]
+    # Exclude system namespaces
+    excludedNamespaces:
+      - kube-system
+      - kube-public
+      - kube-node-lease
+      - gatekeeper-system
+  parameters:
+    labels:
+      - key: "nis2-compliance"
+        allowedRegex: "^(true|false)$"
+      - key: "data-classification"
+        allowedRegex: "^(public|internal|confidential|restricted)$"

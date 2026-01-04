@@ -1,0 +1,23 @@
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sNonRootContainer
+metadata:
+  name: require-nonroot
+  annotations:
+    description: "Ensures all containers run as non-root"
+spec:
+  # Change to "deny" in production
+  enforcementAction: warn
+  match:
+    kinds:
+      - apiGroups: [""]
+        kinds: ["Pod"]
+    excludedNamespaces:
+      - kube-system
+      - kube-public
+      - kube-node-lease
+      - gatekeeper-system
+  parameters:
+    excludedImages:
+      # Some infrastructure components may require root
+      - "docker.io/fluent/fluent-bit:"
+      - "grafana/grafana:"

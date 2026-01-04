@@ -1,0 +1,58 @@
+apiVersion: templates.gatekeeper.sh/v1
+kind: ConstraintTemplate
+metadata:
+  name: k8sresourcelimits
+  annotations:
+    description: "Requires resource limits on all containers"
+    nis2-article: "21.2(a) - Risk Analysis & Capacity Management"
+spec:
+  crd:
+    spec:
+      names:
+        kind: K8sResourceLimits
+      validation:
+        openAPIV3Schema:
+          type: object
+          properties:
+            excludedImages:
+              type: array
+              description: "Images to exclude from this policy"
+              items:
+                type: string
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package k8sresourcelimits
+
+        violation[{"msg": msg}] {
+          container := input.review.object.spec.containers[_]
+          not is_excluded(container.image)
+          not container.resources.limits.memory
+          msg := sprintf("Container '%s' must have memory limits defined", [container.name])
+        }
+
+        violation[{"msg": msg}] {
+          container := input.review.object.spec.containers[_]
+          not is_excluded(container.image)
+          not container.resources.limits.cpu
+          msg := sprintf("Container '%s' must have CPU limits defined", [container.name])
+        }
+
+        violation[{"msg": msg}] {
+          container := input.review.object.spec.containers[_]
+          not is_excluded(container.image)
+          not container.resources.requests.memory
+          msg := sprintf("Container '%s' must have memory requests defined", [container.name])
+        }
+
+        violation[{"msg": msg}] {
+          container := input.review.object.spec.containers[_]
+          not is_excluded(container.image)
+          not container.resources.requests.cpu
+          msg := sprintf("Container '%s' must have CPU requests defined", [container.name])
+        }
+
+        is_excluded(image) {
+          excluded := input.parameters.excludedImages[_]
+          startswith(image, excluded)
+        }

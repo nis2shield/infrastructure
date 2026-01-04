@@ -1,0 +1,51 @@
+apiVersion: templates.gatekeeper.sh/v1
+kind: ConstraintTemplate
+metadata:
+  name: k8snonrootcontainer
+  annotations:
+    description: "Requires containers to run as non-root user"
+    nis2-article: "21.2(d) - Access Control & Privilege Management"
+spec:
+  crd:
+    spec:
+      names:
+        kind: K8sNonRootContainer
+      validation:
+        openAPIV3Schema:
+          type: object
+          properties:
+            excludedImages:
+              type: array
+              description: "Images to exclude from this policy"
+              items:
+                type: string
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package k8snonrootcontainer
+
+        violation[{"msg": msg}] {
+          container := input.review.object.spec.containers[_]
+          not is_excluded(container.image)
+          not container.securityContext.runAsNonRoot
+          msg := sprintf("Container '%s' must set securityContext.runAsNonRoot: true", [container.name])
+        }
+
+        violation[{"msg": msg}] {
+          container := input.review.object.spec.containers[_]
+          not is_excluded(container.image)
+          container.securityContext.runAsUser == 0
+          msg := sprintf("Container '%s' must not run as root (runAsUser: 0)", [container.name])
+        }
+
+        violation[{"msg": msg}] {
+          container := input.review.object.spec.initContainers[_]
+          not is_excluded(container.image)
+          not container.securityContext.runAsNonRoot
+          msg := sprintf("Init container '%s' must set securityContext.runAsNonRoot: true", [container.name])
+        }
+
+        is_excluded(image) {
+          excluded := input.parameters.excludedImages[_]
+          startswith(image, excluded)
+        }

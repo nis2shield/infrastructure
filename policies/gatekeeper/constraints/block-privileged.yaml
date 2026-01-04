@@ -1,0 +1,23 @@
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sPrivilegedContainer
+metadata:
+  name: block-privileged
+  annotations:
+    description: "Blocks privileged containers and privilege escalation"
+spec:
+  # This one defaults to deny - privileged is always a security risk
+  enforcementAction: deny
+  match:
+    kinds:
+      - apiGroups: [""]
+        kinds: ["Pod"]
+    excludedNamespaces:
+      - kube-system
+      - kube-public
+      - kube-node-lease
+      - gatekeeper-system
+  parameters:
+    excludedImages:
+      # CNI plugins may need privileged access
+      - "quay.io/cilium/"
+      - "calico/"

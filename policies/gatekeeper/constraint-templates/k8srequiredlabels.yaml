@@ -1,0 +1,48 @@
+apiVersion: templates.gatekeeper.sh/v1
+kind: ConstraintTemplate
+metadata:
+  name: k8srequiredlabels
+  annotations:
+    description: "Requires specified labels on all resources"
+    nis2-article: "21.2(e) - Incident Response & Tracking"
+spec:
+  crd:
+    spec:
+      names:
+        kind: K8sRequiredLabels
+      validation:
+        openAPIV3Schema:
+          type: object
+          properties:
+            labels:
+              type: array
+              description: "List of required labels"
+              items:
+                type: object
+                properties:
+                  key:
+                    type: string
+                    description: "Label key"
+                  allowedRegex:
+                    type: string
+                    description: "Optional regex for allowed values"
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package k8srequiredlabels
+
+        violation[{"msg": msg}] {
+          provided_labels := {label | input.review.object.metadata.labels[label]}
+          required_labels := {label | label := input.parameters.labels[_].key}
+          missing := required_labels - provided_labels
+          count(missing) > 0
+          msg := sprintf("Missing required labels: %v", [missing])
+        }
+
+        violation[{"msg": msg}] {
+          label := input.parameters.labels[_]
+          label.allowedRegex != ""
+          provided := input.review.object.metadata.labels[label.key]
+          not re_match(label.allowedRegex, provided)
+          msg := sprintf("Label '%s' value '%s' does not match regex '%s'", [label.key, provided, label.allowedRegex])
+        }
