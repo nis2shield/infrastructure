@@ -202,6 +202,70 @@ resource "aws_route_table_association" "private" {
 }
 
 # -------------------------------------------------------------------------
+# VPC Flow Logs (NIS2 Requirement: Network Security/Monitoring)
+# -------------------------------------------------------------------------
+
+resource "aws_cloudwatch_log_group" "flow_log" {
+  name              = "/aws/vpc-flow-log/${local.name_prefix}"
+  retention_in_days = 90
+  kms_key_id        = var.enable_kms_encryption ? aws_kms_key.main[0].arn : null
+
+  tags = {
+    Name = "${local.name_prefix}-flow-log-group"
+  }
+}
+
+resource "aws_iam_role" "flow_log" {
+  name = "${local.name_prefix}-flow-log-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "vpc-flow-logs.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "flow_log" {
+  name = "${local.name_prefix}-flow-log-policy"
+  role = aws_iam_role.flow_log.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents",
+          "logs:DescribeLogGroups",
+          "logs:DescribeLogStreams"
+        ]
+        Effect   = "Allow"
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_flow_log" "main" {
+  iam_role_arn    = aws_iam_role.flow_log.arn
+  log_destination = aws_cloudwatch_log_group.flow_log.arn
+  traffic_type    = "ALL"
+  vpc_id          = aws_vpc.main.id
+
+  tags = {
+    Name = "${local.name_prefix}-vpc-flow-log"
+  }
+}
+
+# -------------------------------------------------------------------------
 # Security Groups
 # -------------------------------------------------------------------------
 
@@ -238,7 +302,7 @@ resource "aws_security_group" "rds" {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = [var.vpc_cidr]
   }
 
   tags = {
