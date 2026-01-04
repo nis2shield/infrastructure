@@ -82,20 +82,20 @@ output "database_name" {
   value       = azurerm_postgresql_flexible_server_database.main.name
 }
 
-# Key Vault
+# Key Vault (conditional)
 output "key_vault_name" {
-  description = "Key Vault name"
-  value       = azurerm_key_vault.main.name
+  description = "Key Vault name (null if disabled)"
+  value       = try(azurerm_key_vault.main[0].name, null)
 }
 
 output "key_vault_uri" {
-  description = "Key Vault URI"
-  value       = azurerm_key_vault.main.vault_uri
+  description = "Key Vault URI (null if disabled)"
+  value       = try(azurerm_key_vault.main[0].vault_uri, null)
 }
 
 output "key_vault_id" {
-  description = "Key Vault ID"
-  value       = azurerm_key_vault.main.id
+  description = "Key Vault ID (null if disabled)"
+  value       = try(azurerm_key_vault.main[0].id, null)
 }
 
 # Storage
@@ -119,15 +119,15 @@ output "backup_primary_blob_endpoint" {
   value       = azurerm_storage_account.backups.primary_blob_endpoint
 }
 
-# Log Analytics
+# Log Analytics (conditional)
 output "log_analytics_workspace_id" {
-  description = "Log Analytics workspace ID"
-  value       = azurerm_log_analytics_workspace.main.id
+  description = "Log Analytics workspace ID (null if disabled)"
+  value       = try(azurerm_log_analytics_workspace.main[0].id, null)
 }
 
 output "log_analytics_workspace_name" {
-  description = "Log Analytics workspace name"
-  value       = azurerm_log_analytics_workspace.main.name
+  description = "Log Analytics workspace name (null if disabled)"
+  value       = try(azurerm_log_analytics_workspace.main[0].name, null)
 }
 
 # Helm values output (for helm install)

@@ -42,11 +42,17 @@ data "azurerm_client_config" "current" {}
 locals {
   name_prefix = "${var.project_name}-${var.environment}"
   
+  # Compute effective toggle values (full_nis2_compliance overrides individual)
+  enable_key_vault     = var.full_nis2_compliance || var.enable_key_vault
+  enable_log_analytics = var.full_nis2_compliance || var.enable_log_analytics
+  enable_geo_backup    = var.full_nis2_compliance || var.db_geo_redundant_backup
+  
   common_tags = merge(
     {
       Project     = var.project_name
       Environment = var.environment
       ManagedBy   = "terraform"
+      NIS2Compliance = var.full_nis2_compliance ? "full" : "partial"
     },
     var.tags
   )
@@ -97,9 +103,10 @@ resource "azurerm_subnet" "db" {
 }
 
 # -------------------------------------------------------------------------
-# Key Vault
+# Key Vault (Optional - NIS2 Art. 21.2.d)
 # -------------------------------------------------------------------------
 resource "azurerm_key_vault" "main" {
+  count                      = local.enable_key_vault ? 1 : 0
   name                       = "${replace(local.name_prefix, "-", "")}kv"
   location                   = azurerm_resource_group.main.location
   resource_group_name        = azurerm_resource_group.main.name
@@ -165,19 +172,26 @@ resource "azurerm_kubernetes_cluster" "main" {
     azure_rbac_enabled     = var.enable_azure_rbac
   }
 
-  key_vault_secrets_provider {
-    secret_rotation_enabled = true
+  dynamic "key_vault_secrets_provider" {
+    for_each = local.enable_key_vault ? [1] : []
+    content {
+      secret_rotation_enabled = true
+    }
   }
 
-  oms_agent {
-    log_analytics_workspace_id = azurerm_log_analytics_workspace.main.id
+  dynamic "oms_agent" {
+    for_each = local.enable_log_analytics ? [1] : []
+    content {
+      log_analytics_workspace_id = azurerm_log_analytics_workspace.main[0].id
+    }
   }
 
   tags = local.common_tags
 }
 
-# Log Analytics
+# Log Analytics (Optional - NIS2 Art. 21.2.a)
 resource "azurerm_log_analytics_workspace" "main" {
+  count               = local.enable_log_analytics ? 1 : 0
   name                = "${local.name_prefix}-logs"
   location            = azurerm_resource_group.main.location
   resource_group_name = azurerm_resource_group.main.name
@@ -226,7 +240,7 @@ resource "azurerm_postgresql_flexible_server" "main" {
   }
 
   backup_retention_days        = var.db_backup_retention_days
-  geo_redundant_backup_enabled = var.db_geo_redundant_backup
+  geo_redundant_backup_enabled = local.enable_geo_backup
 
   tags = local.common_tags
 

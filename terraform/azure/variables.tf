@@ -128,8 +128,46 @@ variable "backup_storage_tier" {
   default     = "Hot"
 }
 
-variable "db_geo_redundant_backup" {
-  description = "Enable geo-redundant backup for PostgreSQL"
+# ============================================================================
+# NIS2 COMPLIANCE TOGGLES
+# ============================================================================
+# These variables control optional services that may incur additional costs.
+# For FULL NIS2 COMPLIANCE (Art. 21), all should be set to 'true'.
+# For development/testing, you may disable some to reduce costs.
+#
+# Cost Impact Reference (approximate):
+#   - Log Analytics: ~$2.30/GB ingested (first 5GB/month free)
+#   - Key Vault: ~$0.03 per 10,000 operations (minimal for most use cases)
+#   - Geo-Redundant Backup: ~2x backup storage cost
+#
+# NIS2 Article 21 Requirements:
+#   - 21.2(a) Risk Management: Requires monitoring (enable_log_analytics)
+#   - 21.2(c) Business Continuity: Requires geo-redundant backup
+#   - 21.2(d) Access Control: Requires secrets management (enable_key_vault)
+# ============================================================================
+
+variable "enable_log_analytics" {
+  description = "Enable Log Analytics workspace for centralized logging and monitoring (NIS2 Art. 21.2.a)"
   type        = bool
   default     = true
 }
+
+variable "enable_key_vault" {
+  description = "Enable Azure Key Vault for secrets management (NIS2 Art. 21.2.d)"
+  type        = bool
+  default     = true
+}
+
+variable "db_geo_redundant_backup" {
+  description = "Enable geo-redundant backup for PostgreSQL disaster recovery (NIS2 Art. 21.2.c)"
+  type        = bool
+  default     = true
+}
+
+# For convenience, a single toggle to enable all NIS2 compliance features
+variable "full_nis2_compliance" {
+  description = "Enable ALL NIS2 compliance features (overrides individual toggles when true)"
+  type        = bool
+  default     = false
+}
+
