@@ -1,0 +1,31 @@
+# Gitleaks Configuration for NIS2 Infrastructure
+# This file configures gitleaks to ignore known false positives.
+
+title = "NIS2 Shield Gitleaks Config"
+
+[extend]
+# Use the default ruleset
+useDefault = true
+
+# Allowlist patterns for known false positives
+[allowlist]
+description = "Allowlisted files and patterns for test fixtures and documentation"
+
+# Paths to ignore entirely
+paths = [
+    # Test fixture keys (not real secrets, generated for testing)
+    '''crypto-replicator/tests/fixtures/keys/.*''',
+    '''crypto-replicator/tests/test_crypto\.py''',
+    '''crypto-replicator/tests/test_key_rotation\.py''',
+    # OpenAPI documentation (example values, not real keys)
+    '''crypto-replicator/docs/openapi\.yaml''',
+]
+
+# Regex patterns to ignore
+regexes = [
+    # Base64 example data in OpenAPI specs
+    '''SGVsbG8gV29ybGQh.*''',
+    '''UlNBIGVuY3J5cHRlZC.*''',
+    '''MTIzNDU2Nzg5.*''',
+    '''QUVTLUdDTSBhdXRo.*''',
+]
