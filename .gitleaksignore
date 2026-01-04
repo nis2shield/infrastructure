@@ -1,0 +1,8 @@
+# Gitleaks Ignore File
+# These are intentional test fixtures, not real secrets.
+
+# Test RSA keys for crypto-replicator unit tests
+crypto-replicator/tests/fixtures/keys/*
+
+# Test key generation in unit tests (generates dummy keys in memory)
+crypto-replicator/tests/test_crypto.py:generate_key_pair
