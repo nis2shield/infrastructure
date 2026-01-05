@@ -289,6 +289,37 @@ All modules include:
 - Secrets management integration
 - High availability options
 
+## 💎 Enterprise: Disaster Recovery Module
+
+For organizations requiring **automatic failover** and **business continuity**, we offer a premium add-on:
+
+```
+┌──────────────────────┐         ┌──────────────────────┐
+│   🏠 PRIMARY SERVER  │  sync   │   ☁️ CLOUD STANDBY   │
+│      (ACTIVE)        │────────▶│     (DORMANT)        │
+│                      │         │                      │
+│  App + DB (primary)  │         │  App OFF + DB replica│
+└──────────────────────┘         └──────────────────────┘
+          │                                │
+          └──────── Health Monitor ────────┘
+                   (NIS2 Shield Cloud)
+                         │
+                         ▼
+              🔄 Automatic DNS Failover
+              (RTO < 5min, RPO < 1min)
+```
+
+**Features:**
+- 🔍 Continuous health monitoring (every 30s)
+- 🔄 Automatic DNS failover via Cloudflare/Route53
+- 🔔 Slack/webhook notifications
+- 🔐 AES-256-GCM encrypted replication
+- ✅ Satisfies NIS2 Art. 21.2.c (Business Continuity)
+
+**Pricing:** €499 one-time license
+
+👉 **[Learn More](https://nis2shield.com/disaster-recovery/)** | **[Contact Sales](mailto:sales@nis2shield.com)**
+
 ## 📁 Project Structure
 
 ```
