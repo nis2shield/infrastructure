@@ -1,0 +1,13 @@
+# LLM Context for NIS2 Shield Infrastructure
+
+> This file is intended for LLMs to quickly understand the context of this repository.
+
+Project: NIS2 Shield Infrastructure
+Docs: https://nis2shield.github.io/
+Strategy: ./LLM_OPTIMIZATION_STRATEGY.md
+Security: ./SECURITY.md
+
+## Key Principles
+1. Defensive Engineering (Auditability > Performance)
+2. Immutable Infrastructure
+3. Zero-Trust Architecture

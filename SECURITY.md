@@ -10,7 +10,7 @@
 
 ## Reporting a Vulnerability
 
-Please report sensitive security issues via email to **security@nis2shield.com** or by opening a [GitHub Security Advisory](https://github.com/nis2shield/django-nis2-shield/security/advisories/new).
+Please report sensitive security issues via email to **security@nis2shield.com** or by opening a [GitHub Security Advisory](https://github.com/nis2shield/infrastructure/security/advisories/new).
 
 **DO NOT create public GitHub issues for security vulnerabilities.**
 
@@ -20,8 +20,16 @@ We proactively notify users about:
 - Critical security patches (CVEs)
 - NIS2/DORA regulatory updates affecting compliance logic
 - Major breaking changes
+- Enterprise Module updates (Disaster Recovery, etc.)
 
 👉 **[Subscribe to Security Updates](https://buttondown.email/nis2shield)**
+
+## Encryption Standards
+
+All infrastructure configurations must adhere to:
+- **Transport**: TLS 1.2+ mandatory (TLS 1.3 preferred).
+- **At Rest**: AES-256 for all persistent storage.
+- **Secrets**: Encrypted via KMS/Vault, never committed.
 
 ## Response Timeline
 
